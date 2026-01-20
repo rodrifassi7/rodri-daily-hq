@@ -1,0 +1,50 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import React, { useState, useMemo } from 'react';
+import { useApp } from '../context/AppContext';
+import { Card, Button, Badge, cn } from '../components/UI';
+import { Dumbbell, Calendar, ListChecks, ChevronRight, X, ChevronLeft, ChevronRight as ChevronRightIcon } from 'lucide-react';
+import { format, startOfToday, subDays, eachDayOfInterval } from 'date-fns';
+import { motion, AnimatePresence } from 'framer-motion';
+const Training = () => {
+    const { data, updateTraining, updateExerciseProgress, updateData } = useApp();
+    const todayStr = format(startOfToday(), 'yyyy-MM-dd');
+    const [selectedDate, setSelectedDate] = useState(todayStr);
+    const [activeRoutine, setActiveRoutine] = useState(null);
+    const weekDays = useMemo(() => {
+        const today = startOfToday();
+        return eachDayOfInterval({
+            start: subDays(today, 6),
+            end: today
+        });
+    }, []);
+    const logsForSelected = data.trainingLogs.find(l => l.date === selectedDate);
+    // Weekly counters
+    const startOfWeek = subDays(startOfToday(), 6); // Last 7 days including today
+    const weeklyLogs = data.trainingLogs.filter(l => l.date >= format(startOfWeek, 'yyyy-MM-dd'));
+    const gymCount = weeklyLogs.filter(l => l.type === 'Gym').length;
+    const padelCount = weeklyLogs.filter(l => l.type === 'Padel').length;
+    // Routine progress helper
+    const getProgress = (routineId, exerciseId, week) => {
+        return data.exerciseProgress.find(p => p.routineId === routineId && p.exerciseId === exerciseId && p.week === week) || { weightKg: 0, reps: 0, sets: 0 };
+    };
+    return (_jsxs("div", { className: "space-y-6 pb-20", children: [_jsxs("header", { className: "flex justify-between items-center px-1", children: [_jsx("h1", { className: "text-3xl font-black", children: "Training" }), _jsx("div", { className: "flex gap-2", children: _jsxs(Badge, { color: data.showDay5 ? 'bg-primary/20 text-primary' : 'bg-white/5 text-muted', onClick: () => updateData({ showDay5: !data.showDay5 }), children: ["Day 5: ", data.showDay5 ? 'ON' : 'OFF'] }) })] }), _jsx("div", { className: "flex justify-between gap-1 overflow-x-auto pb-2 scrollbar-hide", children: weekDays.map(day => {
+                    const dStr = format(day, 'yyyy-MM-dd');
+                    const isSelected = dStr === selectedDate;
+                    const log = data.trainingLogs.find(l => l.date === dStr);
+                    return (_jsxs("button", { onClick: () => setSelectedDate(dStr), className: cn("flex-shrink-0 w-12 flex flex-col items-center py-3 rounded-2xl transition-all", isSelected ? "bg-primary text-white scale-105 z-10 shadow-lg shadow-primary/20" : "bg-card text-muted"), children: [_jsx("span", { className: "text-[10px] font-bold uppercase mb-1", children: format(day, 'EEE') }), _jsx("span", { className: "text-sm font-black", children: format(day, 'd') }), log && log.type !== 'Rest' && (_jsx("div", { className: cn("w-1.5 h-1.5 rounded-full mt-1", isSelected ? "bg-white" : "bg-primary") }))] }, dStr));
+                }) }), _jsxs("div", { className: "grid grid-cols-2 gap-3", children: [_jsxs(Card, { className: "text-center p-4", children: [_jsx("div", { className: "text-[10px] font-black text-muted mb-1 uppercase tracking-widest", children: "Gym This Week" }), _jsxs("div", { className: "text-2xl font-black", children: [gymCount, "/4"] }), _jsx("div", { className: "mt-2 h-1 w-full bg-white/5 rounded-full overflow-hidden", children: _jsx("div", { className: "h-full bg-primary transition-all duration-500", style: { width: `${Math.min(100, (gymCount / 4) * 100)}%` } }) })] }), _jsxs(Card, { className: "text-center p-4", children: [_jsx("div", { className: "text-[10px] font-black text-muted mb-1 uppercase tracking-widest", children: "Padel This Week" }), _jsxs("div", { className: "text-2xl font-black", children: [padelCount, "/3"] }), _jsx("div", { className: "mt-2 h-1 w-full bg-white/5 rounded-full overflow-hidden", children: _jsx("div", { className: "h-full bg-primary transition-all duration-500", style: { width: `${Math.min(100, (padelCount / 3) * 100)}%` } }) })] })] }), _jsxs("section", { children: [_jsx("h2", { className: "text-xl font-bold mb-3 px-1", children: "Daily Log" }), _jsxs(Card, { children: [_jsxs("div", { className: "flex items-center gap-2 mb-4", children: [_jsx(Calendar, { size: 18, className: "text-primary" }), _jsx("span", { className: "text-primary font-bold", children: selectedDate === todayStr ? "Today" : format(new Date(selectedDate + 'T00:00:00'), 'MMM d') })] }), _jsx("div", { className: "flex flex-col gap-2", children: ['Gym', 'Padel', 'Rest'].map(type => (_jsxs("button", { onClick: () => updateTraining(selectedDate, type), className: cn("w-full text-left p-4 rounded-xl border flex items-center justify-between transition-all active:scale-[0.98]", logsForSelected?.type === type
+                                        ? "bg-primary/20 border-primary shadow-sm shadow-primary/10"
+                                        : "bg-white/5 border-white/10 text-muted"), children: [_jsxs("span", { className: "font-bold", children: [type, " session"] }), logsForSelected?.type === type && _jsx("div", { className: "bg-primary p-1 rounded-full", children: _jsx(CheckIcon, {}) })] }, type))) })] })] }), _jsxs("section", { children: [_jsxs("div", { className: "flex items-center justify-between mb-3 px-1", children: [_jsx("h2", { className: "text-xl font-bold", children: "Gym Routine" }), _jsx(Dumbbell, { size: 20, className: "text-primary" })] }), _jsx("div", { className: "grid grid-cols-2 gap-3", children: data.routines.map(routine => {
+                            if (routine.isOptional && !data.showDay5)
+                                return null;
+                            return (_jsxs("button", { onClick: () => setActiveRoutine(routine), className: "bg-card border border-border p-4 rounded-2xl text-left active:scale-95 transition-all flex flex-col justify-between min-h-[100px]", children: [_jsx("span", { className: "text-xs font-black text-primary uppercase tracking-widest", children: routine.title.split(' ')[0] }), _jsxs("div", { className: "flex items-center justify-between mt-2", children: [_jsx("span", { className: "font-bold text-lg", children: routine.title }), _jsx(ChevronRight, { size: 18, className: "text-muted" })] })] }, routine.id));
+                        }) })] }), _jsx(AnimatePresence, { children: activeRoutine && (_jsx("div", { className: "fixed inset-0 z-[100] flex items-end justify-center px-0 bg-black/60 backdrop-blur-sm", children: _jsxs(motion.div, { initial: { y: "100%" }, animate: { y: 0 }, exit: { y: "100%" }, transition: { type: "spring", damping: 25, stiffness: 200 }, className: "bg-black border-t border-white/10 w-full max-w-md h-[90vh] rounded-t-3xl overflow-hidden flex flex-col", children: [_jsxs("header", { className: "p-6 border-b border-white/10 flex justify-between items-center", children: [_jsxs("div", { children: [_jsx("h2", { className: "text-2xl font-black", children: activeRoutine.title }), _jsx("p", { className: "text-xs text-muted font-bold uppercase tracking-widest mt-1", children: "Exercise Tracker (4 Weeks)" })] }), _jsx("button", { onClick: () => setActiveRoutine(null), className: "p-2 bg-white/5 rounded-full text-muted", children: _jsx(X, { size: 24 }) })] }), _jsx("div", { className: "flex-1 overflow-y-auto p-4 space-y-6 pb-12", children: activeRoutine.exercises.map(ex => (_jsxs("div", { className: "space-y-3", children: [_jsx("h3", { className: "font-bold text-primary pl-1", children: ex.name }), _jsx("div", { className: "grid grid-cols-4 gap-2", children: [1, 2, 3, 4].map(week => {
+                                                const prog = getProgress(activeRoutine.id, ex.id, week);
+                                                return (_jsxs("div", { className: "bg-card border border-border rounded-xl p-2 space-y-2", children: [_jsxs("div", { className: "text-[8px] font-black text-muted text-center uppercase tracking-tighter", children: ["Week ", week] }), _jsxs("div", { className: "space-y-1", children: [_jsxs("div", { className: "flex flex-col", children: [_jsx("span", { className: "text-[7px] text-muted font-black uppercase", children: "WT (KG)" }), _jsx("input", { type: "number", className: "w-full bg-transparent text-xs font-bold outline-none border-b border-white/5 focus:border-primary py-0.5", value: prog.weightKg || '', placeholder: "0", onChange: e => updateExerciseProgress(activeRoutine.id, ex.id, week, { weightKg: parseFloat(e.target.value) || 0 }) })] }), _jsxs("div", { className: "flex flex-col", children: [_jsx("span", { className: "text-[7px] text-muted font-black uppercase", children: "REPS" }), _jsx("input", { type: "number", className: "w-full bg-transparent text-xs font-bold outline-none border-b border-white/5 focus:border-primary py-0.5", value: prog.reps || '', placeholder: "0", onChange: e => updateExerciseProgress(activeRoutine.id, ex.id, week, { reps: parseInt(e.target.value) || 0 }) })] }), _jsxs("div", { className: "flex flex-col", children: [_jsx("span", { className: "text-[7px] text-muted font-black uppercase", children: "SETS" }), _jsx("input", { type: "number", className: "w-full bg-transparent text-xs font-bold outline-none border-b border-white/5 focus:border-primary py-0.5", value: prog.sets || '', placeholder: "0", onChange: e => updateExerciseProgress(activeRoutine.id, ex.id, week, { sets: parseInt(e.target.value) || 0 }) })] })] })] }, week));
+                                            }) })] }, ex.id))) })] }) })) })] }));
+};
+function CheckIcon() {
+    return (_jsx("svg", { width: "12", height: "12", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "4", strokeLinecap: "round", strokeLinejoin: "round", children: _jsx("polyline", { points: "20 6 9 17 4 12" }) }));
+}
+export default Training;
+//# sourceMappingURL=Training.js.map

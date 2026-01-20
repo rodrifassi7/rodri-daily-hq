@@ -19,9 +19,13 @@ const Nutrition: React.FC = () => {
 
     const setRating = (rating: NutritionRating) => {
         const existingIdx = data.nutritionLogs.findIndex(l => l.date === todayStr);
-        let newLogs = [...data.nutritionLogs];
+        const newLogs = [...data.nutritionLogs];
+
         if (existingIdx > -1) {
-            newLogs[existingIdx] = { ...newLogs[existingIdx], rating };
+            const existing = newLogs[existingIdx];
+            if (existing) {
+                newLogs[existingIdx] = { ...existing, rating };
+            }
         } else {
             newLogs.push({ date: todayStr, calories: 0, protein: 0, rating, meals: [] });
         }

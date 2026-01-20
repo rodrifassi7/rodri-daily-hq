@@ -4,25 +4,22 @@ export type Frequency = 'daily' | 'weekly';
 export type HabitType = 'checkbox' | 'numeric';
 export type TrainingType = 'Gym' | 'Padel' | 'Rest';
 export type NutritionRating = 'Good' | 'OK' | 'Bad';
-
 export interface Habit {
     id: string;
     name: string;
     emoji: string;
     type: HabitType;
     frequency: Frequency;
-    target?: number; // for numeric type
+    target?: number;
     unit?: string;
     createdAt: string;
 }
-
 export interface HabitLog {
-    date: string; // YYYY-MM-DD
+    date: string;
     habitId: string;
     completed: boolean;
     value?: number;
 }
-
 export interface Task {
     id: string;
     title: string;
@@ -34,21 +31,18 @@ export interface Task {
     recurring?: boolean;
     createdAt: string;
 }
-
 export interface TrainingLog {
-    date: string; // YYYY-MM-DD
+    date: string;
     type: TrainingType;
     notes?: string;
 }
-
 export interface NutritionLog {
-    date: string; // YYYY-MM-DD
+    date: string;
     calories: number;
     protein: number;
     rating?: NutritionRating;
     meals?: Meal[];
 }
-
 export interface Meal {
     id: string;
     name: string;
@@ -56,28 +50,24 @@ export interface Meal {
     protein: number;
     time: string;
 }
-
 export interface Exercise {
     id: string;
     name: string;
 }
-
 export interface RoutineTemplate {
     id: string;
     title: string;
     exercises: Exercise[];
     isOptional?: boolean;
 }
-
 export interface ExerciseProgress {
     routineId: string;
     exerciseId: string;
-    week: number; // 1-4
+    week: number;
     weightKg?: number;
     reps?: number;
     sets?: number;
 }
-
 export interface AppData {
     habits: Habit[];
     habitLogs: HabitLog[];
@@ -87,8 +77,9 @@ export interface AppData {
     routines: RoutineTemplate[];
     exerciseProgress: ExerciseProgress[];
     legacyRoutines: {
-        [key: string]: string; // Keep for backward compatibility/migration
+        [key: string]: string;
     };
     nextWeekFocus: string;
     showDay5: boolean;
 }
+//# sourceMappingURL=index.d.ts.map
