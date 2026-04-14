@@ -6,9 +6,10 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-export const Card: React.FC<{ children: React.ReactNode; className?: string; onClick?: () => void }> = ({ children, className, onClick }) => (
+export const Card: React.FC<{ children: React.ReactNode; className?: string; style?: React.CSSProperties; onClick?: () => void }> = ({ children, className, style, onClick }) => (
     <div
         onClick={onClick}
+        style={style}
         className={cn("bg-card border border-border rounded-2xl p-4 mb-4", onClick && "active:scale-95 transition-transform", className)}
     >
         {children}
@@ -59,10 +60,10 @@ export const ProgressBar: React.FC<{ progress: number; label?: string; subLabel?
     );
 };
 
-export const Badge: React.FC<{ children: React.ReactNode; color?: string; onClick?: () => void }> = ({ children, color = 'bg-primary/20 text-primary', onClick }) => (
+export const Badge: React.FC<{ children: React.ReactNode; color?: string; className?: string; onClick?: () => void }> = ({ children, color = 'bg-primary/20 text-primary', className, onClick }) => (
     <span
         onClick={onClick}
-        className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider", color, onClick && "cursor-pointer active:scale-95 transition-all")}
+        className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider", color, onClick && "cursor-pointer active:scale-95 transition-all", className)}
     >
         {children}
     </span>

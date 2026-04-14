@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { AppData, HabitLog, Task, TrainingLog, NutritionLog, TrainingType, ExerciseProgress } from '../types';
+import type { AppData, HabitLog, Task, TrainingLog, NutritionLog, TrainingType, GymSession } from '../types';
 import { loadData, saveData, INITIAL_DATA } from '../utils/storage';
 
 interface AppContextType {
@@ -9,7 +9,7 @@ interface AppContextType {
     toggleTask: (taskId: string) => void;
     updateTraining: (date: string, type: TrainingType) => void;
     updateNutrition: (date: string, calories: number, protein: number) => void;
-    updateExerciseProgress: (routineId: string, exerciseId: string, week: number, progress: Partial<Omit<ExerciseProgress, 'routineId' | 'exerciseId' | 'week'>>) => void;
+    saveGymSession: (session: GymSession) => void;
     addTask: (task: Omit<Task, 'id' | 'createdAt' | 'completed' | 'isTop3'>) => void;
     deleteTask: (id: string) => void;
     toggleTop3: (id: string) => void;
@@ -40,15 +40,6 @@ export const ensureNutritionLog = (date: string, existing?: NutritionLog): Nutri
     protein: existing?.protein ?? 0,
     meals: existing?.meals ?? [],
     ...(existing?.rating !== undefined ? { rating: existing.rating } : {})
-});
-
-export const ensureExerciseProgress = (routineId: string, exerciseId: string, week: number, existing?: ExerciseProgress): ExerciseProgress => ({
-    routineId,
-    exerciseId,
-    week,
-    ...(existing?.weightKg !== undefined ? { weightKg: existing.weightKg } : {}),
-    ...(existing?.reps !== undefined ? { reps: existing.reps } : {}),
-    ...(existing?.sets !== undefined ? { sets: existing.sets } : {})
 });
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -135,33 +126,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         });
     }, []);
 
-    const updateExerciseProgress = useCallback((routineId: string, exerciseId: string, week: number, progress: Partial<Omit<ExerciseProgress, 'routineId' | 'exerciseId' | 'week'>>) => {
+    const saveGymSession = useCallback((session: GymSession) => {
         setData(prev => {
-            const existingIdx = prev.exerciseProgress.findIndex(
-                p => p.routineId === routineId && p.exerciseId === exerciseId && p.week === week
-            );
-
-            const newProgress = [...prev.exerciseProgress];
+            const existingIdx = prev.gymSessions.findIndex(s => s.id === session.id);
+            const newSessions = [...prev.gymSessions];
             if (existingIdx > -1) {
-                const existing = newProgress[existingIdx];
-                if (existing) {
-                    const updated = { ...existing };
-                    if (progress.weightKg !== undefined) updated.weightKg = progress.weightKg;
-                    if (progress.reps !== undefined) updated.reps = progress.reps;
-                    if (progress.sets !== undefined) updated.sets = progress.sets;
-                    newProgress[existingIdx] = updated;
-                }
+                newSessions[existingIdx] = session;
             } else {
-                newProgress.push(ensureExerciseProgress(routineId, exerciseId, week, {
-                    routineId,
-                    exerciseId,
-                    week,
-                    weightKg: progress.weightKg ?? 0,
-                    reps: progress.reps ?? 0,
-                    sets: progress.sets ?? 0
-                }));
+                newSessions.push(session);
             }
-            return { ...prev, exerciseProgress: newProgress };
+            return { ...prev, gymSessions: newSessions };
         });
     }, []);
 
@@ -197,7 +171,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             toggleTask,
             updateTraining,
             updateNutrition,
-            updateExerciseProgress,
+            saveGymSession,
             addTask,
             deleteTask,
             toggleTop3,

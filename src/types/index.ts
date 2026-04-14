@@ -2,7 +2,7 @@ export type Priority = 'High' | 'Medium' | 'Low';
 export type Category = 'Gym' | 'NP PRO' | 'Personal';
 export type Frequency = 'daily' | 'weekly';
 export type HabitType = 'checkbox' | 'numeric';
-export type TrainingType = 'Gym' | 'Padel' | 'Rest';
+export type TrainingType = 'Gym' | 'Rest'; // Removed Padel
 export type NutritionRating = 'Good' | 'OK' | 'Bad';
 
 export interface Habit {
@@ -57,9 +57,18 @@ export interface Meal {
     time: string;
 }
 
+export interface ExerciseTarget {
+    sets: number;
+    reps: string; // "6-8", "12-15 + myo"
+    minReps: number;
+    maxReps: number;
+    isPrimary?: boolean;
+}
+
 export interface Exercise {
     id: string;
     name: string;
+    target: ExerciseTarget;
 }
 
 export interface RoutineTemplate {
@@ -69,13 +78,21 @@ export interface RoutineTemplate {
     isOptional?: boolean;
 }
 
-export interface ExerciseProgress {
+export interface ExerciseSetRecord {
+    weightKg: number;
+    reps: number;
+    completed: boolean;
+}
+
+export interface GymSession {
+    id: string;
+    date: string; // YYYY-MM-DD
     routineId: string;
-    exerciseId: string;
-    week: number; // 1-4
-    weightKg?: number;
-    reps?: number;
-    sets?: number;
+    exercises: {
+        exerciseId: string;
+        sets: ExerciseSetRecord[];
+        isCompleted?: boolean;
+    }[];
 }
 
 export interface AppData {
@@ -85,9 +102,9 @@ export interface AppData {
     trainingLogs: TrainingLog[];
     nutritionLogs: NutritionLog[];
     routines: RoutineTemplate[];
-    exerciseProgress: ExerciseProgress[];
+    gymSessions: GymSession[]; // Supercedes exerciseProgress
     legacyRoutines: {
-        [key: string]: string; // Keep for backward compatibility/migration
+        [key: string]: string; 
     };
     nextWeekFocus: string;
     showDay5: boolean;

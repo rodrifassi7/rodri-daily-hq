@@ -11,6 +11,7 @@ const DEFAULT_HABITS: Habit[] = [
     { id: '5', name: 'Focus block 25min', emoji: '📵', type: 'checkbox', frequency: 'daily', createdAt: new Date().toISOString() },
     { id: '6', name: '10min improvement', emoji: '🧠', type: 'checkbox', frequency: 'daily', createdAt: new Date().toISOString() },
     { id: '7', name: 'Sleep 7h+', emoji: '😴', type: 'checkbox', frequency: 'daily', createdAt: new Date().toISOString() },
+    { id: 'no-lol', name: 'No jugar al LoL', emoji: '🚫', type: 'checkbox', frequency: 'daily', createdAt: new Date().toISOString() },
 ];
 
 const DEFAULT_ROUTINES: RoutineTemplate[] = [
@@ -18,62 +19,50 @@ const DEFAULT_ROUTINES: RoutineTemplate[] = [
         id: 'upper-a',
         title: 'Upper A',
         exercises: [
-            { id: 'ua-1', name: 'Bench Press / Chest Press Machine' },
-            { id: 'ua-2', name: 'Incline Dumbbell Press' },
-            { id: 'ua-3', name: 'Lat Pulldown' },
-            { id: 'ua-4', name: 'Seated Row' },
-            { id: 'ua-5', name: 'Shoulder Press' },
-            { id: 'ua-6', name: 'Lateral Raises' },
-            { id: 'ua-7', name: 'Triceps Pushdown' },
-            { id: 'ua-8', name: 'Biceps Curl' },
+            { id: 'ua-1', name: 'Press banca', target: { sets: 4, reps: '6-8', minReps: 6, maxReps: 8, isPrimary: true } },
+            { id: 'ua-2', name: 'Remo Pendlay', target: { sets: 4, reps: '6-8', minReps: 6, maxReps: 8, isPrimary: true } },
+            { id: 'ua-3', name: 'Press inclinado mancuernas', target: { sets: 3, reps: '8-10', minReps: 8, maxReps: 10 } },
+            { id: 'ua-4', name: 'Jalón al pecho', target: { sets: 3, reps: '10-12', minReps: 10, maxReps: 12 } },
+            { id: 'ua-5', name: 'Elevaciones laterales', target: { sets: 4, reps: '12-15', minReps: 12, maxReps: 15 } },
+            { id: 'ua-6', name: 'Curl barra', target: { sets: 3, reps: '8-10', minReps: 8, maxReps: 10 } },
+            { id: 'ua-7', name: 'Tríceps polea', target: { sets: 3, reps: '10-12', minReps: 10, maxReps: 12 } },
+            { id: 'ua-8', name: 'Facepull', target: { sets: 3, reps: '15-20', minReps: 15, maxReps: 20 } },
         ]
     },
     {
         id: 'lower-a',
         title: 'Lower A',
         exercises: [
-            { id: 'la-1', name: 'Squat / Hack Squat' },
-            { id: 'la-2', name: 'Romanian Deadlift' },
-            { id: 'la-3', name: 'Leg Press' },
-            { id: 'la-4', name: 'Leg Curl' },
-            { id: 'la-5', name: 'Leg Extension' },
-            { id: 'la-6', name: 'Calf Raises' },
-            { id: 'la-7', name: 'Abs (Cable Crunch)' },
+            { id: 'la-1', name: 'Sentadilla', target: { sets: 4, reps: '6-8', minReps: 6, maxReps: 8, isPrimary: true } },
+            { id: 'la-2', name: 'Prensa (pies bajos)', target: { sets: 3, reps: '10-12', minReps: 10, maxReps: 12 } },
+            { id: 'la-3', name: 'Extensiones', target: { sets: 3, reps: '12-15 + myo', minReps: 12, maxReps: 15 } },
+            { id: 'la-4', name: 'Peso muerto rumano', target: { sets: 3, reps: '8-10', minReps: 8, maxReps: 10, isPrimary: true } },
+            { id: 'la-5', name: 'Gemelos prensa', target: { sets: 4, reps: '12-15', minReps: 12, maxReps: 15 } },
         ]
     },
     {
         id: 'upper-b',
         title: 'Upper B',
         exercises: [
-            { id: 'ub-1', name: 'Incline Chest Press' },
-            { id: 'ub-2', name: 'Dumbbell Fly / Pec Deck' },
-            { id: 'ub-3', name: 'Pull Ups / Assisted Pull Up' },
-            { id: 'ub-4', name: 'Row Machine' },
-            { id: 'ub-5', name: 'Arnold Press' },
-            { id: 'ub-6', name: 'Rear Delt Fly' },
-            { id: 'ub-7', name: 'Triceps Overhead Extension' },
-            { id: 'ub-8', name: 'Hammer Curl' },
+            { id: 'ub-1', name: 'Press militar', target: { sets: 4, reps: '6-8', minReps: 6, maxReps: 8, isPrimary: true } },
+            { id: 'ub-2', name: 'Dominadas', target: { sets: 4, reps: '6-10', minReps: 6, maxReps: 10, isPrimary: true } },
+            { id: 'ub-3', name: 'Press inclinado máquina', target: { sets: 3, reps: '10-12', minReps: 10, maxReps: 12 } },
+            { id: 'ub-4', name: 'Remo polea', target: { sets: 3, reps: '10-12', minReps: 10, maxReps: 12 } },
+            { id: 'ub-5', name: 'Elevaciones laterales', target: { sets: 4, reps: '15-20', minReps: 15, maxReps: 20 } },
+            { id: 'ub-6', name: 'Curl inclinado', target: { sets: 3, reps: '10-12', minReps: 10, maxReps: 12 } },
+            { id: 'ub-7', name: 'Tríceps francés', target: { sets: 3, reps: '10-12', minReps: 10, maxReps: 12 } },
+            { id: 'ub-8', name: 'Martillo', target: { sets: 2, reps: '12-15', minReps: 12, maxReps: 15 } },
         ]
     },
     {
         id: 'lower-b',
         title: 'Lower B',
         exercises: [
-            { id: 'lb-1', name: 'Deadlift Variation / Trap Bar' },
-            { id: 'lb-2', name: 'Bulgarian Split Squat' },
-            { id: 'lb-3', name: 'Hip Thrust' },
-            { id: 'lb-4', name: 'Leg Curl' },
-            { id: 'lb-5', name: 'Leg Extension' },
-            { id: 'lb-6', name: 'Calf Raises' },
-            { id: 'lb-7', name: 'Abs (Plank / Machine)' },
-        ]
-    },
-    {
-        id: 'day-5',
-        title: 'Day 5 (Optional)',
-        isOptional: true,
-        exercises: [
-            { id: 'd5-1', name: 'Full Body / Weak Points' },
+            { id: 'lb-1', name: 'Hip thrust', target: { sets: 4, reps: '8-10', minReps: 8, maxReps: 10, isPrimary: true } },
+            { id: 'lb-2', name: 'Curl femoral', target: { sets: 4, reps: '10-12', minReps: 10, maxReps: 12 } },
+            { id: 'lb-3', name: 'Zancadas', target: { sets: 3, reps: '10 por pierna', minReps: 10, maxReps: 10 } },
+            { id: 'lb-4', name: 'Prensa (pies altos)', target: { sets: 2, reps: '12-15', minReps: 12, maxReps: 15 } },
+            { id: 'lb-5', name: 'Gemelos sentado', target: { sets: 4, reps: '15-20', minReps: 15, maxReps: 20 } },
         ]
     }
 ];
@@ -85,7 +74,7 @@ export const INITIAL_DATA: AppData = {
     trainingLogs: [],
     nutritionLogs: [],
     routines: DEFAULT_ROUTINES,
-    exerciseProgress: [],
+    gymSessions: [],
     legacyRoutines: {},
     nextWeekFocus: '',
     showDay5: false,
@@ -97,17 +86,31 @@ export const loadData = (): AppData => {
     try {
         const data = JSON.parse(stored);
 
-        // Migration: convert legacy routines if they exist
-        if (data.routines && !Array.isArray(data.routines)) {
+        // Migration: convert legacy routines if they exist or force new hypertrophy split
+        const hasNewStructure = Array.isArray(data.routines) && data.routines.some((r: any) => r.id === 'upper-a');
+        if (!hasNewStructure) {
             data.legacyRoutines = data.routines;
             data.routines = DEFAULT_ROUTINES;
-            data.exerciseProgress = data.exerciseProgress || [];
+            data.gymSessions = data.gymSessions || [];
             data.showDay5 = data.showDay5 ?? false;
+        }
+
+        // Drop `exerciseProgress` if it exists in old storage and map it to `gymSessions`. Actually just load `gymSessions`.
+        if (!data.gymSessions) {
+            data.gymSessions = [];
+        }
+
+        // Ensure 'No jugar al LoL' exists (Migration for existing users)
+        const loadedHabits = Array.isArray(data.habits) ? data.habits : DEFAULT_HABITS;
+        if (!loadedHabits.find((h: Habit) => h.id === 'no-lol')) {
+            const noLol = DEFAULT_HABITS.find(h => h.id === 'no-lol');
+            if (noLol) loadedHabits.push(noLol);
         }
 
         return {
             ...INITIAL_DATA,
             ...data,
+            habits: loadedHabits,
             // Ensure routines stay structured even if someone messes with the JSON
             routines: Array.isArray(data.routines) ? data.routines : DEFAULT_ROUTINES
         };

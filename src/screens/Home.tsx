@@ -147,7 +147,7 @@ const Home: React.FC = () => {
                         </Badge>
                     </div>
                     <div className="flex gap-2">
-                        {(['Gym', 'Padel', 'Rest'] as const).map(type => (
+                        {(['Gym', 'Rest'] as const).map(type => (
                             <Button
                                 key={type}
                                 variant={todayTraining?.type === type ? 'primary' : 'outline'}
@@ -216,12 +216,6 @@ const Home: React.FC = () => {
                         <div className="text-xs text-muted mb-1">GYM</div>
                         <div className="text-lg font-black">
                             {data.trainingLogs.filter(l => l.type === 'Gym').length}/4
-                        </div>
-                    </div>
-                    <div className="bg-card border border-border rounded-xl p-3 text-center">
-                        <div className="text-xs text-muted mb-1">PADEL</div>
-                        <div className="text-lg font-black">
-                            {data.trainingLogs.filter(l => l.type === 'Padel').length}/3
                         </div>
                     </div>
                 </div>

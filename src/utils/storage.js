@@ -8,6 +8,7 @@ const DEFAULT_HABITS = [
     { id: '5', name: 'Focus block 25min', emoji: '📵', type: 'checkbox', frequency: 'daily', createdAt: new Date().toISOString() },
     { id: '6', name: '10min improvement', emoji: '🧠', type: 'checkbox', frequency: 'daily', createdAt: new Date().toISOString() },
     { id: '7', name: 'Sleep 7h+', emoji: '😴', type: 'checkbox', frequency: 'daily', createdAt: new Date().toISOString() },
+    { id: 'no-lol', name: 'No jugar al LoL', emoji: '🚫', type: 'checkbox', frequency: 'daily', createdAt: new Date().toISOString() },
 ];
 const DEFAULT_ROUTINES = [
     {
@@ -98,9 +99,17 @@ export const loadData = () => {
             data.exerciseProgress = data.exerciseProgress || [];
             data.showDay5 = data.showDay5 ?? false;
         }
+        // Ensure 'No jugar al LoL' exists (Migration for existing users)
+        const loadedHabits = Array.isArray(data.habits) ? data.habits : DEFAULT_HABITS;
+        if (!loadedHabits.find((h) => h.id === 'no-lol')) {
+            const noLol = DEFAULT_HABITS.find(h => h.id === 'no-lol');
+            if (noLol)
+                loadedHabits.push(noLol);
+        }
         return {
             ...INITIAL_DATA,
             ...data,
+            habits: loadedHabits,
             // Ensure routines stay structured even if someone messes with the JSON
             routines: Array.isArray(data.routines) ? data.routines : DEFAULT_ROUTINES
         };

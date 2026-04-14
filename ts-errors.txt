@@ -1,0 +1,5 @@
+﻿src/components/GymSessionView.tsx(91,43): error TS2532: Object is possibly 'undefined'.
+src/components/GymSessionView.tsx(92,31): error TS2532: Object is possibly 'undefined'.
+src/screens/Home.tsx(155,73): error TS2345: Argument of type '"Gym" | "Rest" | "Padel"' is not assignable to parameter of type 'TrainingType'.
+  Type '"Padel"' is not assignable to type 'TrainingType'.
+src/screens/Home.tsx(224,60): error TS2367: This comparison appears to be unintentional because the types 'TrainingType' and '"Padel"' have no overlap.

@@ -24,11 +24,25 @@ const Review: React.FC = () => {
 
         const completedTasks = data.tasks.filter(t => t.completed).length;
 
+        // Calculate No LoL Streak
+        let noLolStreak = 0;
+        let curr = startOfToday();
+        while (true) {
+            const dStr = format(curr, 'yyyy-MM-dd');
+            if (data.habitLogs.some(l => l.habitId === 'no-lol' && l.date === dStr && l.completed)) {
+                noLolStreak++;
+                curr = subDays(curr, 1);
+            } else {
+                break;
+            }
+        }
+
         return {
             habitRate: Math.round(habitRate),
             totalTrainings,
             avgProtein: Math.round(avgProtein),
-            completedTasks
+            completedTasks,
+            noLolStreak
         };
     }, [data]);
 
@@ -71,6 +85,11 @@ const Review: React.FC = () => {
                     <Star size={24} className="text-primary mb-2" />
                     <div className="text-3xl font-black">{stats.completedTasks}</div>
                     <div className="text-[10px] font-black text-muted uppercase tracking-widest mt-1">Total Tasks</div>
+                </Card>
+                <Card className="flex flex-col items-center justify-center p-6 text-center col-span-2">
+                    <div className="text-3xl">🚫</div>
+                    <div className="text-3xl font-black">{stats.noLolStreak}</div>
+                    <div className="text-[10px] font-black text-muted uppercase tracking-widest mt-1">Días sin jugar al LoL</div>
                 </Card>
             </section>
 
