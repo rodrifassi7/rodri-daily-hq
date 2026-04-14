@@ -141,7 +141,7 @@ export const GymSessionView: React.FC<Props> = ({ routine, date, onClose }) => {
                         if (exData && exData.sets.every(s => s.completed)) {
                             if (currMaxWeight > lastMaxWeight || currTotalReps > lastTotalReps) {
                                 status = 'green';
-                                const inc = ex.target.isPrimary ? 2.5 : 1;
+                                const inc = ex.target?.isPrimary ? 2.5 : 1;
                                 suggestion = `¡Progreso! Subí a ${currMaxWeight + inc}kg próxima sesión.`;
                             } else {
                                 // Check Stagnation over 3 sessions
@@ -163,11 +163,11 @@ export const GymSessionView: React.FC<Props> = ({ routine, date, onClose }) => {
                             suggestion = `Última vez: ${lastMaxWeight}kg (${lastTotalReps} reps totales)`;
                         }
                     } else {
-                        suggestion = `Primer registro - busquemos un peso para ${ex.target.reps} reps`;
+                        suggestion = `Primer registro - busquemos un peso para ${ex.target?.reps || 'X'} reps`;
                     }
 
                     // Initialization logic for UI render
-                    const setsCount = ex.target.sets;
+                    const setsCount = ex.target?.sets || 3;
                     const renderSets = exData?.sets || (lastSession ? lastSession.sets.map(s => ({...s, completed:false})) : Array(setsCount).fill({ weightKg: 0, reps: 0, completed: false }));
 
                     return (
@@ -178,9 +178,9 @@ export const GymSessionView: React.FC<Props> = ({ routine, date, onClose }) => {
                                 <div>
                                     <h3 className="font-bold text-lg leading-tight flex items-center gap-2">
                                         {index + 1}. {ex.name}
-                                        {ex.target.isPrimary && <Badge className="text-[9px] px-1.5 py-0">PRIMARY</Badge>}
+                                        {ex.target?.isPrimary && <Badge className="text-[9px] px-1.5 py-0">PRIMARY</Badge>}
                                     </h3>
-                                    <p className="text-xs font-bold text-muted">{setsCount} sets • {ex.target.reps} reps</p>
+                                    <p className="text-xs font-bold text-muted">{setsCount} sets • {ex.target?.reps || 'X'} reps</p>
                                 </div>
                                 <div className="flex items-center gap-1">
                                     <div className={cn(
