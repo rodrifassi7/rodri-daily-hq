@@ -1,9 +1,6 @@
-import type { AppData, Habit, RoutineTemplate } from '../types';
 import { format } from 'date-fns';
-
 const STORAGE_KEY = 'rodri_daily_hq_data';
-
-const DEFAULT_HABITS: Habit[] = [
+const DEFAULT_HABITS = [
     { id: '1', name: 'Training Done', emoji: '🏋️', type: 'checkbox', frequency: 'daily', createdAt: new Date().toISOString() },
     { id: '2', name: 'Hit 140g protein', emoji: '🍗', type: 'checkbox', frequency: 'daily', createdAt: new Date().toISOString() },
     { id: '3', name: '2.5L water', emoji: '💧', type: 'checkbox', frequency: 'daily', createdAt: new Date().toISOString() },
@@ -16,8 +13,7 @@ const DEFAULT_HABITS: Habit[] = [
     { id: 'pastilla', name: 'Tomar pastilla', emoji: '💊', type: 'checkbox', frequency: 'daily', createdAt: new Date().toISOString() },
     { id: 'leer', name: 'Leer 2 páginas', emoji: '📖', type: 'checkbox', frequency: 'daily', createdAt: new Date().toISOString() },
 ];
-
-const DEFAULT_ROUTINES: RoutineTemplate[] = [
+const DEFAULT_ROUTINES = [
     {
         id: 'upper-a',
         title: 'Upper A',
@@ -69,8 +65,7 @@ const DEFAULT_ROUTINES: RoutineTemplate[] = [
         ]
     }
 ];
-
-export const INITIAL_DATA: AppData = {
+export const INITIAL_DATA = {
     habits: DEFAULT_HABITS,
     habitLogs: [],
     tasks: [],
@@ -82,37 +77,34 @@ export const INITIAL_DATA: AppData = {
     nextWeekFocus: '',
     showDay5: false,
 };
-
-export const loadData = (): AppData => {
+export const loadData = () => {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return INITIAL_DATA;
+    if (!stored)
+        return INITIAL_DATA;
     try {
         const data = JSON.parse(stored);
-
         // Migration: convert legacy routines if they exist or force new hypertrophy split
-        const hasNewStructure = Array.isArray(data.routines) && data.routines.some((r: any) => r.id === 'upper-a');
+        const hasNewStructure = Array.isArray(data.routines) && data.routines.some((r) => r.id === 'upper-a');
         if (!hasNewStructure) {
             data.legacyRoutines = data.routines;
             data.routines = DEFAULT_ROUTINES;
             data.gymSessions = data.gymSessions || [];
             data.showDay5 = data.showDay5 ?? false;
         }
-
         // Drop `exerciseProgress` if it exists in old storage and map it to `gymSessions`. Actually just load `gymSessions`.
         if (!data.gymSessions) {
             data.gymSessions = [];
         }
-
         // Ensure specific habits exist (Migration for existing users)
         const loadedHabits = Array.isArray(data.habits) ? data.habits : DEFAULT_HABITS;
         const requiredHabitIds = ['no-lol', 'creatina', 'pastilla', 'leer'];
         requiredHabitIds.forEach(id => {
-            if (!loadedHabits.find((h: Habit) => h.id === id)) {
+            if (!loadedHabits.find((h) => h.id === id)) {
                 const habit = DEFAULT_HABITS.find(h => h.id === id);
-                if (habit) loadedHabits.push(habit);
+                if (habit)
+                    loadedHabits.push(habit);
             }
         });
-
         return {
             ...INITIAL_DATA,
             ...data,
@@ -120,16 +112,15 @@ export const loadData = (): AppData => {
             // Ensure routines stay structured even if someone messes with the JSON
             routines: Array.isArray(data.routines) ? data.routines : DEFAULT_ROUTINES
         };
-    } catch (e) {
+    }
+    catch (e) {
         console.error('Failed to parse storage data', e);
         return INITIAL_DATA;
     }
 };
-
-export const saveData = (data: AppData) => {
+export const saveData = (data) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 };
-
 export const exportData = () => {
     const data = loadData();
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -142,16 +133,16 @@ export const exportData = () => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 };
-
-export const importData = (file: File): Promise<void> => {
+export const importData = (file) => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
-                const data = JSON.parse(e.target?.result as string);
+                const data = JSON.parse(e.target?.result);
                 saveData(data);
                 resolve();
-            } catch (err) {
+            }
+            catch (err) {
                 reject(err);
             }
         };
@@ -159,3 +150,4 @@ export const importData = (file: File): Promise<void> => {
         reader.readAsText(file);
     });
 };
+//# sourceMappingURL=storage.js.map
