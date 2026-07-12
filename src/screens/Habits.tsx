@@ -2,21 +2,20 @@ import React, { useState } from 'react';
 import { cn } from '../components/UI';
 import { useApp } from '../context/AppContext';
 import { Card, Button, ProgressBar } from '../components/UI';
-import { Plus, Trash2, Edit2, ChevronRight, Check } from 'lucide-react';
+import { Plus, Trash2, Edit2, ChevronRight, Check, GraduationCap } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { HabitEditor } from '../components/HabitEditor';
 import type { Habit } from '../types';
 import { format, startOfToday } from 'date-fns';
 
 const Habits: React.FC = () => {
-    const { data, toggleHabit, updateData } = useApp();
-    const [isAdding, setIsAdding] = useState(false);
+    const { data, toggleHabit, deleteHabit, saveHabit, setStudyHabitId } = useApp();
+    const [editingHabit, setEditingHabit] = useState<Habit | null | 'new'>(null);
     const todayStr = format(startOfToday(), 'yyyy-MM-dd');
 
-    const deleteHabit = (id: string) => {
-        if (confirm('Are you sure?')) {
-            updateData({
-                habits: data.habits.filter(h => h.id !== id),
-                habitLogs: data.habitLogs.filter(l => l.habitId !== id)
-            });
+    const handleDeleteHabit = (id: string) => {
+        if (confirm('¿Seguro que quieres eliminar este hábito?')) {
+            deleteHabit(id);
         }
     };
 
@@ -27,7 +26,7 @@ const Habits: React.FC = () => {
                 <Button
                     variant="primary"
                     className="p-2 rounded-full w-10 h-10 flex items-center justify-center"
-                    onClick={() => alert('Feature coming soon: Custom Habits')}
+                    onClick={() => setEditingHabit('new')}
                 >
                     <Plus size={24} />
                 </Button>
@@ -66,6 +65,25 @@ const Habits: React.FC = () => {
                                         <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded uppercase font-black">
                                             STREAK: {streak}
                                         </span>
+                                        {data.studyHabitId === habit.id && (
+                                            <span className="text-[10px] bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded uppercase font-black">
+                                                ESTUDIO
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-3 mt-2">
+                                        <button onClick={(e) => { e.stopPropagation(); setEditingHabit(habit); }} className="text-muted hover:text-white transition-colors">
+                                            <Edit2 size={14} />
+                                        </button>
+                                        <button onClick={(e) => { e.stopPropagation(); handleDeleteHabit(habit.id); }} className="text-red-500/50 hover:text-red-500 transition-colors">
+                                            <Trash2 size={14} />
+                                        </button>
+                                        <button 
+                                            onClick={(e) => { e.stopPropagation(); setStudyHabitId(habit.id); }} 
+                                            className={cn("transition-colors", data.studyHabitId === habit.id ? "text-blue-500" : "text-muted hover:text-white")}
+                                        >
+                                            <GraduationCap size={16} />
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -82,6 +100,27 @@ const Habits: React.FC = () => {
                     );
                 })}
             </div>
+
+            <AnimatePresence>
+                {editingHabit !== null && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 50 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 50 }}
+                        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                        className="fixed inset-0 z-[100] flex"
+                    >
+                        <HabitEditor
+                            habit={editingHabit === 'new' ? null : editingHabit}
+                            onClose={() => setEditingHabit(null)}
+                            onSave={(habit) => {
+                                saveHabit(habit);
+                                setEditingHabit(null);
+                            }}
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

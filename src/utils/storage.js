@@ -86,6 +86,7 @@ export const INITIAL_DATA = {
             createdAt: new Date().toISOString()
         }
     ],
+    studyHabitId: 'leer',
 };
 export const loadData = () => {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -106,14 +107,9 @@ export const loadData = () => {
         }
         // Ensure specific habits exist (Migration for existing users)
         const loadedHabits = Array.isArray(data.habits) ? data.habits : DEFAULT_HABITS;
-        const requiredHabitIds = ['no-lol', 'creatina', 'pastilla', 'leer'];
-        requiredHabitIds.forEach(id => {
-            if (!loadedHabits.find((h) => h.id === id)) {
-                const habit = DEFAULT_HABITS.find(h => h.id === id);
-                if (habit)
-                    loadedHabits.push(habit);
-            }
-        });
+        if (!data.studyHabitId) {
+            data.studyHabitId = 'leer';
+        }
         return {
             ...INITIAL_DATA,
             ...data,

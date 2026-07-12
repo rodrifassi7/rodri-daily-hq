@@ -60,9 +60,9 @@ const MondayRitual: React.FC = () => {
     const auto = useMemo(() => {
         const last7 = Array.from({ length: 7 }, (_, i) => format(subDays(startOfToday(), i), 'yyyy-MM-dd'));
         const entrenamientos = data.gymSessions.filter(s => last7.includes(s.date)).length;
-        const estudio = data.habitLogs.filter(l => l.habitId === 'leer' && last7.includes(l.date) && l.completed).length;
+        const estudio = data.studyHabitId ? data.habitLogs.filter(l => l.habitId === data.studyHabitId && last7.includes(l.date) && l.completed).length : 0;
         return { entrenamientos, estudio };
-    }, [data.gymSessions, data.habitLogs]);
+    }, [data.gymSessions, data.habitLogs, data.studyHabitId]);
 
     const sorted = useMemo(
         () => [...data.weeklyReviews].sort((a, b) => b.weekOf.localeCompare(a.weekOf)),

@@ -91,6 +91,7 @@ export const INITIAL_DATA: AppData = {
             createdAt: new Date().toISOString()
         }
     ],
+    studyHabitId: 'leer',
 };
 
 export const loadData = (): AppData => {
@@ -114,13 +115,10 @@ export const loadData = (): AppData => {
 
         // Ensure specific habits exist (Migration for existing users)
         const loadedHabits = Array.isArray(data.habits) ? data.habits : DEFAULT_HABITS;
-        const requiredHabitIds = ['no-lol', 'creatina', 'pastilla', 'leer'];
-        requiredHabitIds.forEach(id => {
-            if (!loadedHabits.find((h: Habit) => h.id === id)) {
-                const habit = DEFAULT_HABITS.find(h => h.id === id);
-                if (habit) loadedHabits.push(habit);
-            }
-        });
+        
+        if (!data.studyHabitId) {
+            data.studyHabitId = 'leer';
+        }
 
         return {
             ...INITIAL_DATA,

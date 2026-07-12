@@ -130,6 +130,28 @@ export const AppProvider = ({ children }) => {
             routines: prev.routines.filter(r => r.id !== routineId)
         }));
     }, []);
+    const saveHabit = useCallback((habit) => {
+        setData(prev => {
+            const existingIdx = prev.habits.findIndex(h => h.id === habit.id);
+            const newHabits = [...prev.habits];
+            if (existingIdx > -1) {
+                newHabits[existingIdx] = habit;
+            }
+            else {
+                newHabits.push(habit);
+            }
+            return { ...prev, habits: newHabits };
+        });
+    }, []);
+    const deleteHabit = useCallback((habitId) => {
+        setData(prev => ({
+            ...prev,
+            habits: prev.habits.filter(h => h.id !== habitId)
+        }));
+    }, []);
+    const setStudyHabitId = useCallback((habitId) => {
+        setData(prev => ({ ...prev, studyHabitId: habitId }));
+    }, []);
     const addTask = useCallback((task) => {
         setData(prev => ({
             ...prev,
@@ -161,6 +183,9 @@ export const AppProvider = ({ children }) => {
             saveGymSession,
             saveRoutine,
             deleteRoutine,
+            saveHabit,
+            deleteHabit,
+            setStudyHabitId,
             addTask,
             deleteTask,
             toggleTop3,

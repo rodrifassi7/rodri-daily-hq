@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { AppData, HabitLog, Task, TrainingLog, NutritionLog, TrainingType, GymSession, RoutineTemplate } from '../types';
+import type { AppData, Habit, HabitLog, Task, TrainingLog, NutritionLog, TrainingType, GymSession, RoutineTemplate } from '../types';
 import { loadData, saveData, INITIAL_DATA } from '../utils/storage';
 
 interface AppContextType {
@@ -12,6 +12,9 @@ interface AppContextType {
     saveGymSession: (session: GymSession) => void;
     saveRoutine: (routine: RoutineTemplate) => void;
     deleteRoutine: (routineId: string) => void;
+    saveHabit: (habit: Habit) => void;
+    deleteHabit: (habitId: string) => void;
+    setStudyHabitId: (habitId: string) => void;
     addTask: (task: Omit<Task, 'id' | 'createdAt' | 'completed' | 'isTop3'>) => void;
     deleteTask: (id: string) => void;
     toggleTop3: (id: string) => void;
@@ -161,6 +164,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }));
     }, []);
 
+    const saveHabit = useCallback((habit: Habit) => {
+        setData(prev => {
+            const existingIdx = prev.habits.findIndex(h => h.id === habit.id);
+            const newHabits = [...prev.habits];
+            if (existingIdx > -1) {
+                newHabits[existingIdx] = habit;
+            } else {
+                newHabits.push(habit);
+            }
+            return { ...prev, habits: newHabits };
+        });
+    }, []);
+
+    const deleteHabit = useCallback((habitId: string) => {
+        setData(prev => ({
+            ...prev,
+            habits: prev.habits.filter(h => h.id !== habitId)
+        }));
+    }, []);
+
+    const setStudyHabitId = useCallback((habitId: string) => {
+        setData(prev => ({ ...prev, studyHabitId: habitId }));
+    }, []);
+
     const addTask = useCallback((task: Omit<Task, 'id' | 'createdAt' | 'completed' | 'isTop3'>) => {
         setData(prev => ({
             ...prev,
@@ -196,6 +223,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             saveGymSession,
             saveRoutine,
             deleteRoutine,
+            saveHabit,
+            deleteHabit,
+            setStudyHabitId,
             addTask,
             deleteTask,
             toggleTop3,

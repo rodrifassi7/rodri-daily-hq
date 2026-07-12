@@ -135,4 +135,5 @@ export interface AppData {
     showDay5: boolean;
     weeklyReviews: WeeklyReview[];
     parkedIdeas: ParkedIdea[];
+    studyHabitId?: string;
 }
