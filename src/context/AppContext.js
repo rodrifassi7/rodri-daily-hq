@@ -111,6 +111,25 @@ export const AppProvider = ({ children }) => {
             return { ...prev, gymSessions: newSessions };
         });
     }, []);
+    const saveRoutine = useCallback((routine) => {
+        setData(prev => {
+            const existingIdx = prev.routines.findIndex(r => r.id === routine.id);
+            const newRoutines = [...prev.routines];
+            if (existingIdx > -1) {
+                newRoutines[existingIdx] = routine;
+            }
+            else {
+                newRoutines.push(routine);
+            }
+            return { ...prev, routines: newRoutines };
+        });
+    }, []);
+    const deleteRoutine = useCallback((routineId) => {
+        setData(prev => ({
+            ...prev,
+            routines: prev.routines.filter(r => r.id !== routineId)
+        }));
+    }, []);
     const addTask = useCallback((task) => {
         setData(prev => ({
             ...prev,
@@ -140,6 +159,8 @@ export const AppProvider = ({ children }) => {
             updateTraining,
             updateNutrition,
             saveGymSession,
+            saveRoutine,
+            deleteRoutine,
             addTask,
             deleteTask,
             toggleTop3,

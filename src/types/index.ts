@@ -95,6 +95,31 @@ export interface GymSession {
     }[];
 }
 
+export interface WeeklyReview {
+    id: string;
+    weekOf: string; // Monday YYYY-MM-DD
+    // NPPRO
+    viandasDia: number;
+    clientesNuevos: number;
+    enRiesgoContactados: number;
+    cajaSemana: number;
+    horasNppro: number;
+    // Cuerpo (entrenamientos y estudio se autocalculan)
+    peso: number;
+    medida: number;
+    // Foco
+    focoSemana: string;
+    createdAt: string;
+}
+
+export interface ParkedIdea {
+    id: string;
+    text: string;
+    reviewNote?: string;
+    archived: boolean;
+    createdAt: string;
+}
+
 export interface AppData {
     habits: Habit[];
     habitLogs: HabitLog[];
@@ -108,4 +133,6 @@ export interface AppData {
     };
     nextWeekFocus: string;
     showDay5: boolean;
+    weeklyReviews: WeeklyReview[];
+    parkedIdeas: ParkedIdea[];
 }

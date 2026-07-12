@@ -1,17 +1,19 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { Card, cn } from '../components/UI';
-import { Calendar, Dumbbell, ChevronRight } from 'lucide-react';
+import { Calendar, Dumbbell, ChevronRight, Edit3, Plus } from 'lucide-react';
 import { format, startOfToday, subDays, eachDayOfInterval } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { RoutineTemplate } from '../types';
 import { GymSessionView } from '../components/GymSessionView';
+import { RoutineEditor } from '../components/RoutineEditor';
 
 const Training: React.FC = () => {
-    const { data, updateTraining } = useApp();
+    const { data, updateTraining, saveRoutine, deleteRoutine } = useApp();
     const todayStr = format(startOfToday(), 'yyyy-MM-dd');
     const [selectedDate, setSelectedDate] = useState(todayStr);
     const [activeRoutine, setActiveRoutine] = useState<RoutineTemplate | null>(null);
+    const [editingRoutine, setEditingRoutine] = useState<RoutineTemplate | null | 'new'>(null);
 
     const weekDays = useMemo(() => {
         const today = startOfToday();
@@ -95,8 +97,13 @@ const Training: React.FC = () => {
             {/* Gym Routine Section */}
             <section>
                 <div className="flex items-center justify-between mb-4 px-1 mt-6">
-                    <h2 className="text-2xl font-black">Routines</h2>
-                    <Dumbbell size={24} className="text-primary" />
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-2xl font-black">Routines</h2>
+                        <Dumbbell size={24} className="text-primary" />
+                    </div>
+                    <button onClick={() => setEditingRoutine('new')} className="p-2 bg-primary/20 text-primary rounded-full hover:bg-primary/30">
+                        <Plus size={20} />
+                    </button>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                     {data.routines.filter(r => !r.isOptional).map(routine => {
@@ -111,9 +118,17 @@ const Training: React.FC = () => {
                                 <span className="text-[10px] font-black text-primary uppercase tracking-widest">{routine.title.split(' ')[0]}</span>
                                 
                                 <div className="flex items-center justify-between mt-2 z-10 w-full">
-                                    <span className="font-black text-xl leading-none">{routine.title.split(' ')[1]}</span>
-                                    <div className="bg-white/5 p-1.5 rounded-full group-hover:bg-primary group-hover:text-black transition-colors">
-                                        <ChevronRight size={16} />
+                                    <span className="font-black text-xl leading-none">{routine.title.split(' ').slice(1).join(' ')}</span>
+                                    <div className="flex gap-1 z-20">
+                                        <div 
+                                            onClick={(e) => { e.stopPropagation(); setEditingRoutine(routine); }}
+                                            className="bg-white/5 p-1.5 rounded-full hover:bg-white/10 text-muted hover:text-white transition-colors"
+                                        >
+                                            <Edit3 size={16} />
+                                        </div>
+                                        <div className="bg-white/5 p-1.5 rounded-full group-hover:bg-primary group-hover:text-black transition-colors">
+                                            <ChevronRight size={16} />
+                                        </div>
                                     </div>
                                 </div>
                             </button>
@@ -136,6 +151,32 @@ const Training: React.FC = () => {
                             routine={activeRoutine} 
                             date={selectedDate} 
                             onClose={() => setActiveRoutine(null)} 
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Routine Editor Modal */}
+            <AnimatePresence>
+                {editingRoutine !== null && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 50 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 50 }}
+                        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                        className="fixed inset-0 z-[100] flex"
+                    >
+                        <RoutineEditor 
+                            routine={editingRoutine === 'new' ? null : editingRoutine}
+                            onClose={() => setEditingRoutine(null)}
+                            onSave={(routine) => {
+                                saveRoutine(routine);
+                                setEditingRoutine(null);
+                            }}
+                            onDelete={(routineId) => {
+                                deleteRoutine(routineId);
+                                setEditingRoutine(null);
+                            }}
                         />
                     </motion.div>
                 )}

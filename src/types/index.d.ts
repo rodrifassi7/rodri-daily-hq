@@ -83,6 +83,26 @@ export interface GymSession {
         isCompleted?: boolean;
     }[];
 }
+export interface WeeklyReview {
+    id: string;
+    weekOf: string;
+    viandasDia: number;
+    clientesNuevos: number;
+    enRiesgoContactados: number;
+    cajaSemana: number;
+    horasNppro: number;
+    peso: number;
+    medida: number;
+    focoSemana: string;
+    createdAt: string;
+}
+export interface ParkedIdea {
+    id: string;
+    text: string;
+    reviewNote?: string;
+    archived: boolean;
+    createdAt: string;
+}
 export interface AppData {
     habits: Habit[];
     habitLogs: HabitLog[];
@@ -96,5 +116,7 @@ export interface AppData {
     };
     nextWeekFocus: string;
     showDay5: boolean;
+    weeklyReviews: WeeklyReview[];
+    parkedIdeas: ParkedIdea[];
 }
 //# sourceMappingURL=index.d.ts.map

@@ -76,6 +76,16 @@ export const INITIAL_DATA = {
     legacyRoutines: {},
     nextWeekFocus: '',
     showDay5: false,
+    weeklyReviews: [],
+    parkedIdeas: [
+        {
+            id: 'padelito',
+            text: 'Padelito — retomar cuando esté operando el club (canal de distribución: profes del club)',
+            reviewNote: 'Revisar enero 2027',
+            archived: false,
+            createdAt: new Date().toISOString()
+        }
+    ],
 };
 export const loadData = () => {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -83,17 +93,16 @@ export const loadData = () => {
         return INITIAL_DATA;
     try {
         const data = JSON.parse(stored);
-        // Migration: convert legacy routines if they exist or force new hypertrophy split
-        const hasNewStructure = Array.isArray(data.routines) && data.routines.some((r) => r.id === 'upper-a');
-        if (!hasNewStructure) {
-            data.legacyRoutines = data.routines;
-            data.routines = DEFAULT_ROUTINES;
-            data.gymSessions = data.gymSessions || [];
-            data.showDay5 = data.showDay5 ?? false;
-        }
         // Drop `exerciseProgress` if it exists in old storage and map it to `gymSessions`. Actually just load `gymSessions`.
         if (!data.gymSessions) {
             data.gymSessions = [];
+        }
+        // Migration: Ritual de Lunes + Estacionamiento
+        if (!Array.isArray(data.weeklyReviews)) {
+            data.weeklyReviews = [];
+        }
+        if (!Array.isArray(data.parkedIdeas)) {
+            data.parkedIdeas = INITIAL_DATA.parkedIdeas;
         }
         // Ensure specific habits exist (Migration for existing users)
         const loadedHabits = Array.isArray(data.habits) ? data.habits : DEFAULT_HABITS;

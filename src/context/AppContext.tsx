@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { AppData, HabitLog, Task, TrainingLog, NutritionLog, TrainingType, GymSession } from '../types';
+import type { AppData, HabitLog, Task, TrainingLog, NutritionLog, TrainingType, GymSession, RoutineTemplate } from '../types';
 import { loadData, saveData, INITIAL_DATA } from '../utils/storage';
 
 interface AppContextType {
@@ -10,6 +10,8 @@ interface AppContextType {
     updateTraining: (date: string, type: TrainingType) => void;
     updateNutrition: (date: string, calories: number, protein: number) => void;
     saveGymSession: (session: GymSession) => void;
+    saveRoutine: (routine: RoutineTemplate) => void;
+    deleteRoutine: (routineId: string) => void;
     addTask: (task: Omit<Task, 'id' | 'createdAt' | 'completed' | 'isTop3'>) => void;
     deleteTask: (id: string) => void;
     toggleTop3: (id: string) => void;
@@ -139,6 +141,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         });
     }, []);
 
+    const saveRoutine = useCallback((routine: RoutineTemplate) => {
+        setData(prev => {
+            const existingIdx = prev.routines.findIndex(r => r.id === routine.id);
+            const newRoutines = [...prev.routines];
+            if (existingIdx > -1) {
+                newRoutines[existingIdx] = routine;
+            } else {
+                newRoutines.push(routine);
+            }
+            return { ...prev, routines: newRoutines };
+        });
+    }, []);
+
+    const deleteRoutine = useCallback((routineId: string) => {
+        setData(prev => ({
+            ...prev,
+            routines: prev.routines.filter(r => r.id !== routineId)
+        }));
+    }, []);
+
     const addTask = useCallback((task: Omit<Task, 'id' | 'createdAt' | 'completed' | 'isTop3'>) => {
         setData(prev => ({
             ...prev,
@@ -172,6 +194,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             updateTraining,
             updateNutrition,
             saveGymSession,
+            saveRoutine,
+            deleteRoutine,
             addTask,
             deleteTask,
             toggleTop3,

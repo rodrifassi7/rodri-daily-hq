@@ -1,5 +1,5 @@
 import React from 'react';
-import type { AppData, HabitLog, Task, TrainingLog, NutritionLog, TrainingType, GymSession } from '../types';
+import type { AppData, HabitLog, Task, TrainingLog, NutritionLog, TrainingType, GymSession, RoutineTemplate } from '../types';
 interface AppContextType {
     data: AppData;
     updateData: (newData: Partial<AppData>) => void;
@@ -8,6 +8,8 @@ interface AppContextType {
     updateTraining: (date: string, type: TrainingType) => void;
     updateNutrition: (date: string, calories: number, protein: number) => void;
     saveGymSession: (session: GymSession) => void;
+    saveRoutine: (routine: RoutineTemplate) => void;
+    deleteRoutine: (routineId: string) => void;
     addTask: (task: Omit<Task, 'id' | 'createdAt' | 'completed' | 'isTop3'>) => void;
     deleteTask: (id: string) => void;
     toggleTop3: (id: string) => void;

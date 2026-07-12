@@ -5,6 +5,8 @@ import { Card, Button, ProgressBar, Badge } from '../components/UI';
 import { PieChart, Download, Upload, Trash2, Github, ExternalLink, Star, Dumbbell, Apple, CheckSquare } from 'lucide-react';
 import { exportData, importData } from '../utils/storage';
 import { format, subDays, startOfToday } from 'date-fns';
+import MondayRitual from '../components/MondayRitual';
+import ParkingLot from '../components/ParkingLot';
 
 const Review: React.FC = () => {
     const { data, updateData, resetData } = useApp();
@@ -63,6 +65,12 @@ const Review: React.FC = () => {
             <header className="flex justify-between items-center">
                 <h1 className="text-3xl font-black">Review</h1>
             </header>
+
+            {/* Ritual de Lunes */}
+            <MondayRitual />
+
+            {/* Estacionamiento de ideas */}
+            <ParkingLot />
 
             {/* Weekly Stats */}
             <section className="grid grid-cols-2 gap-3">
