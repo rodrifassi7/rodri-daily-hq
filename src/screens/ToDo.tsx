@@ -65,7 +65,7 @@ const ToDo: React.FC = () => {
                             >
                                 <option value="Personal">Personal</option>
                                 <option value="Gym">Gym</option>
-                                <option value="NP PRO">NP PRO</option>
+                                {(data.profile.business || newCat === 'NP PRO') && <option value="NP PRO">NP PRO</option>}
                             </select>
                             <select
                                 className="flex-1 bg-white/5 border border-white/10 rounded-xl p-2 text-xs text-white"

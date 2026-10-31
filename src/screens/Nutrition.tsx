@@ -14,8 +14,18 @@ const Nutrition: React.FC = () => {
         return data.nutritionLogs.find(l => l.date === todayStr) || { calories: 0, protein: 0, rating: 'OK' as NutritionRating };
     }, [data.nutritionLogs, todayStr]);
 
-    const caloriesGoal = 2811;
-    const proteinGoal = 140;
+    const caloriesGoal = data.goals.calories;
+    const proteinGoal = data.goals.protein;
+    const [editingGoals, setEditingGoals] = useState(false);
+    const [goalDraft, setGoalDraft] = useState(data.goals);
+
+    const saveGoals = () => {
+        updateData({ goals: {
+            calories: Math.max(500, Math.round(goalDraft.calories) || caloriesGoal),
+            protein: Math.max(20, Math.round(goalDraft.protein) || proteinGoal),
+        } });
+        setEditingGoals(false);
+    };
 
     const setRating = (rating: NutritionRating) => {
         const existingIdx = data.nutritionLogs.findIndex(l => l.date === todayStr);
@@ -43,7 +53,39 @@ const Nutrition: React.FC = () => {
         <div className="space-y-6">
             <header className="flex justify-between items-center">
                 <h1 className="text-3xl font-black">Nutrition</h1>
+                <button
+                    onClick={() => { setGoalDraft(data.goals); setEditingGoals(v => !v); }}
+                    className="text-xs font-bold px-3 py-2 rounded-full bg-white/5 border border-white/10 text-muted active:scale-95"
+                >
+                    {editingGoals ? 'Cancelar' : 'Editar metas'}
+                </button>
             </header>
+
+            {editingGoals && (
+                <Card className="p-4 space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                        <label className="text-xs font-bold text-muted uppercase">
+                            Calorías
+                            <input
+                                type="number" inputMode="numeric"
+                                value={goalDraft.calories || ''}
+                                onChange={e => setGoalDraft(g => ({ ...g, calories: parseInt(e.target.value) || 0 }))}
+                                className="w-full bg-black border border-white/10 rounded-xl p-3 font-bold mt-1 text-white text-center"
+                            />
+                        </label>
+                        <label className="text-xs font-bold text-muted uppercase">
+                            Proteína (g)
+                            <input
+                                type="number" inputMode="numeric"
+                                value={goalDraft.protein || ''}
+                                onChange={e => setGoalDraft(g => ({ ...g, protein: parseInt(e.target.value) || 0 }))}
+                                className="w-full bg-black border border-white/10 rounded-xl p-3 font-bold mt-1 text-white text-center"
+                            />
+                        </label>
+                    </div>
+                    <Button className="w-full bg-primary text-black" onClick={saveGoals}>Guardar metas</Button>
+                </Card>
+            )}
 
             {/* Main Stats */}
             <div className="grid grid-cols-1 gap-4">

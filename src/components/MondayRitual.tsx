@@ -89,6 +89,7 @@ const MondayRitual: React.FC = () => {
     };
 
     const prev = sorted.find(r => r.weekOf < mondayKey);
+    const biz = data.profile.business;
     const showForm = !current || editing;
 
     return (
@@ -112,6 +113,7 @@ const MondayRitual: React.FC = () => {
 
             {showForm ? (
                 <Card className="p-4 space-y-3">
+                    {biz && <>
                     <div className="text-[10px] font-black text-primary uppercase tracking-widest">NPPRO</div>
                     <div className="grid grid-cols-2 gap-3">
                         <Field label="Viandas/día" value={form.viandasDia} onChange={v => setForm(f => ({ ...f, viandasDia: v }))} />
@@ -120,6 +122,7 @@ const MondayRitual: React.FC = () => {
                         <Field label="Caja semana" value={form.cajaSemana} onChange={v => setForm(f => ({ ...f, cajaSemana: v }))} suffix="$" />
                     </div>
                     <Field label="Horas que me pidió NPPRO" value={form.horasNppro} onChange={v => setForm(f => ({ ...f, horasNppro: v }))} suffix="hs" />
+                    </>}
 
                     <div className="text-[10px] font-black text-primary uppercase tracking-widest pt-2">Cuerpo</div>
                     <div className="grid grid-cols-2 gap-3">
@@ -130,7 +133,7 @@ const MondayRitual: React.FC = () => {
                     <div className="text-[10px] font-black text-primary uppercase tracking-widest pt-2">La pregunta de la semana</div>
                     <textarea
                         className="w-full bg-card border border-border rounded-xl p-3 text-white outline-none focus:border-primary min-h-[70px] text-sm"
-                        placeholder="¿Qué UNA cosa muevo esta semana que sume viandas/día o me acerque al club?"
+                        placeholder={biz ? "¿Qué UNA cosa muevo esta semana que sume viandas/día o me acerque al club?" : "¿Qué UNA cosa quiero lograr esta semana?"}
                         value={form.focoSemana}
                         onChange={(e) => setForm(f => ({ ...f, focoSemana: e.target.value }))}
                     />
@@ -146,19 +149,22 @@ const MondayRitual: React.FC = () => {
                             <Pencil size={14} />
                         </button>
                     </div>
-                    <div className="grid grid-cols-3 gap-2 text-center">
-                        <div>
+                    <div className={`grid gap-2 text-center ${biz ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                        {biz && <div>
                             <div className="text-2xl font-black">{current.viandasDia}</div>
                             <div className="text-[9px] font-black text-muted uppercase">Viandas/día <Delta curr={current.viandasDia} prev={prev?.viandasDia} /></div>
-                        </div>
+                        </div>}
                         <div>
                             <div className="text-2xl font-black">{current.peso}<span className="text-sm">kg</span></div>
                             <div className="text-[9px] font-black text-muted uppercase">Peso <Delta curr={current.peso} prev={prev?.peso} unit="kg" /></div>
                         </div>
-                        <div>
+                        {biz ? <div>
                             <div className="text-2xl font-black">{current.horasNppro}<span className="text-sm">hs</span></div>
                             <div className="text-[9px] font-black text-muted uppercase">Hs NPPRO <Delta curr={current.horasNppro} prev={prev?.horasNppro} invert unit="hs" /></div>
-                        </div>
+                        </div> : <div>
+                            <div className="text-2xl font-black">{current.medida}<span className="text-sm">cm</span></div>
+                            <div className="text-[9px] font-black text-muted uppercase">Medida <Delta curr={current.medida} prev={prev?.medida} unit="cm" /></div>
+                        </div>}
                     </div>
                     {current.focoSemana && (
                         <div className="mt-3 text-xs text-white/80 bg-primary/10 border border-primary/20 rounded-xl p-3">
@@ -174,9 +180,9 @@ const MondayRitual: React.FC = () => {
                     {sorted.filter(r => r.weekOf !== mondayKey).slice(0, 8).map((r) => (
                         <div key={r.id} className="flex justify-between items-center bg-card/50 border border-border rounded-xl px-3 py-2 text-xs">
                             <span className="text-muted font-bold">{format(new Date(r.weekOf + 'T00:00:00'), 'd MMM', { locale: es })}</span>
-                            <span className="font-black">🍱 {r.viandasDia}/día</span>
+                            {biz && <span className="font-black">🍱 {r.viandasDia}/día</span>}
                             <span className="font-black">⚖️ {r.peso}kg</span>
-                            <span className="font-black">⏱ {r.horasNppro}hs</span>
+                            {biz ? <span className="font-black">⏱ {r.horasNppro}hs</span> : <span className="font-black">📏 {r.medida}cm</span>}
                         </div>
                     ))}
                 </div>

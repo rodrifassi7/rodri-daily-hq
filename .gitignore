@@ -2,3 +2,10 @@ node_modules
 dist
 .env
 .DS_Store
+# salida de tsc (la app compila con Vite)
+src/**/*.js
+src/**/*.d.ts
+src/**/*.map
+vite.config.js
+vite.config.d.ts
+*.map

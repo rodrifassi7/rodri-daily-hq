@@ -136,4 +136,18 @@ export interface AppData {
     weeklyReviews: WeeklyReview[];
     parkedIdeas: ParkedIdea[];
     studyHabitId?: string;
+    goals: NutritionGoals;
+    profile: Profile;
+    appliedMigrations: string[];
+}
+
+export interface Profile {
+    name: string;
+    // Muestra lo de negocio (NPPRO en el ritual de lunes, categoría NP PRO, etc.)
+    business: boolean;
+}
+
+export interface NutritionGoals {
+    calories: number;
+    protein: number;
 }
