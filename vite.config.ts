@@ -9,7 +9,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
-        name: 'Rodri Daily HQ',
+        name: 'Daily HQ',
         short_name: 'Daily HQ',
         description: 'Personal productivity, fitness and nutrition tracker',
         theme_color: '#000000',

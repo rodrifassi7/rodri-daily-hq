@@ -1,9 +1,16 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import type { AppData, Habit, HabitLog, Task, TrainingLog, NutritionLog, TrainingType, GymSession, RoutineTemplate } from '../types';
-import { loadData, saveData, INITIAL_DATA } from '../utils/storage';
+import { writeCache, normalizeData, createNewUserData } from '../utils/storage';
+import { supabase } from '../lib/supabase';
+
+export type SyncStatus = 'saved' | 'saving' | 'offline';
 
 interface AppContextType {
     data: AppData;
+    userEmail: string;
+    syncStatus: SyncStatus;
+    replaceData: (data: AppData) => void;
+    signOut: () => Promise<void>;
     updateData: (newData: Partial<AppData>) => void;
     toggleHabit: (habitId: string, date: string) => void;
     toggleTask: (taskId: string) => void;
@@ -47,12 +54,95 @@ export const ensureNutritionLog = (date: string, existing?: NutritionLog): Nutri
     ...(existing?.rating !== undefined ? { rating: existing.rating } : {})
 });
 
-export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [data, setData] = useState<AppData>(() => loadData());
+interface ProviderProps {
+    children: React.ReactNode;
+    userId: string;
+    userEmail: string;
+    initialData: AppData;
+    // true si los datos iniciales todavía no están en Supabase (cuenta nueva o importación)
+    needsUpload: boolean;
+}
 
+export const AppProvider: React.FC<ProviderProps> = ({ children, userId, userEmail, initialData, needsUpload }) => {
+    const [data, setData] = useState<AppData>(initialData);
+    const [syncStatus, setSyncStatus] = useState<SyncStatus>(needsUpload ? 'saving' : 'saved');
+    const pending = useRef(needsUpload);
+    const latest = useRef(data);
+    const isFirstRender = useRef(true);
+
+    // Sube los datos a Supabase. Si no hay señal, queda pendiente y reintenta.
+    const flush = useCallback(async () => {
+        if (!pending.current) return;
+        const snapshot = latest.current;
+        setSyncStatus('saving');
+        const { error } = await supabase
+            .from('app_data')
+            .upsert({ user_id: userId, data: snapshot, updated_at: new Date().toISOString() });
+        if (error) {
+            console.error('Error sincronizando', error);
+            setSyncStatus('offline');
+            return;
+        }
+        // Si hubo cambios mientras subía, queda pendiente para la próxima
+        if (latest.current === snapshot) {
+            pending.current = false;
+            setSyncStatus('saved');
+        }
+    }, [userId]);
+
+    // Cada cambio: copia local inmediata + subida con un pequeño retraso
     useEffect(() => {
-        saveData(data);
-    }, [data]);
+        latest.current = data;
+        writeCache(userId, data);
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            if (!pending.current) return;
+        } else {
+            pending.current = true;
+        }
+        setSyncStatus('saving');
+        const t = setTimeout(flush, 800);
+        return () => clearTimeout(t);
+    }, [data, userId, flush]);
+
+    // Reintentos y traer cambios hechos en otro dispositivo
+    useEffect(() => {
+        const onVisibility = async () => {
+            if (document.visibilityState === 'hidden') {
+                flush();
+                return;
+            }
+            if (pending.current) {
+                flush();
+                return;
+            }
+            const { data: row } = await supabase.from('app_data').select('data').eq('user_id', userId).maybeSingle();
+            if (row?.data && !pending.current) {
+                const remote = normalizeData(row.data);
+                if (JSON.stringify(remote) !== JSON.stringify(latest.current)) {
+                    isFirstRender.current = true; // no volver a subir lo que acabamos de bajar
+                    setData(remote);
+                }
+            }
+        };
+        const onOnline = () => flush();
+        const retry = setInterval(() => { if (pending.current) flush(); }, 15000);
+        document.addEventListener('visibilitychange', onVisibility);
+        window.addEventListener('online', onOnline);
+        return () => {
+            document.removeEventListener('visibilitychange', onVisibility);
+            window.removeEventListener('online', onOnline);
+            clearInterval(retry);
+        };
+    }, [flush, userId]);
+
+    const replaceData = useCallback((newData: AppData) => setData(newData), []);
+
+    const signOut = useCallback(async () => {
+        await flush();
+        if (pending.current && !window.confirm('Hay cambios que todavía no se subieron (sin señal). Si salís ahora quedan solo en este teléfono. ¿Salir igual?')) return;
+        await supabase.auth.signOut();
+    }, [flush]);
 
     const updateData = useCallback((newData: Partial<AppData>) => {
         setData(prev => ({ ...prev, ...newData }));
@@ -209,12 +299,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, []);
 
     const resetData = useCallback(() => {
-        setData(INITIAL_DATA);
+        setData(prev => ({ ...createNewUserData(prev.profile.name, true), profile: prev.profile }));
     }, []);
 
     return (
         <AppContext.Provider value={{
             data,
+            userEmail,
+            syncStatus,
+            replaceData,
+            signOut,
             updateData,
             toggleHabit,
             toggleTask,

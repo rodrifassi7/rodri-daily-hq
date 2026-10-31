@@ -95,6 +95,7 @@ export const INITIAL_DATA: AppData = {
     ],
     studyHabitId: 'leer',
     goals: { calories: 2811, protein: 155 },
+    profile: { name: 'Rodri', business: true },
     appliedMigrations: [],
 };
 
@@ -137,73 +138,104 @@ const runMigrations = (data: AppData): AppData => {
     return result;
 };
 
-export const loadData = (): AppData => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return { ...INITIAL_DATA, appliedMigrations: MIGRATIONS.map(m => m.id) };
+// --- Datos guardados localmente ---
+// LEGACY_KEY: donde la app guardaba todo antes de tener usuarios (solo en el teléfono de Rodri).
+export const LEGACY_KEY = STORAGE_KEY;
+const LEGACY_CLAIMED_KEY = 'rodri_daily_hq_legacy_claimed';
+const cacheKey = (userId: string) => `daily_hq_cache_${userId}`;
+
+// Datos de arranque para un usuario nuevo: hábitos genéricos, sin cosas de NPPRO
+const GENERIC_HABITS: Habit[] = [
+    { id: '1', name: 'Entrené', emoji: '🏋️', type: 'checkbox', frequency: 'daily', createdAt: new Date().toISOString() },
+    { id: '2', name: 'Llegué a la proteína', emoji: '🍗', type: 'checkbox', frequency: 'daily', createdAt: new Date().toISOString() },
+    { id: '3', name: '2L de agua', emoji: '💧', type: 'checkbox', frequency: 'daily', createdAt: new Date().toISOString() },
+    { id: '4', name: '8k pasos', emoji: '🚶', type: 'checkbox', frequency: 'daily', createdAt: new Date().toISOString() },
+    { id: '7', name: 'Dormir 7h+', emoji: '😴', type: 'checkbox', frequency: 'daily', createdAt: new Date().toISOString() },
+    { id: 'leer', name: 'Leer 2 páginas', emoji: '📖', type: 'checkbox', frequency: 'daily', createdAt: new Date().toISOString() },
+];
+
+export const createNewUserData = (name: string, withBaseRoutine: boolean): AppData => ({
+    ...INITIAL_DATA,
+    habits: GENERIC_HABITS,
+    routines: withBaseRoutine ? DEFAULT_ROUTINES : [],
+    parkedIdeas: [],
+    goals: { calories: 2000, protein: 110 },
+    profile: { name: name.trim() || 'Vos', business: false },
+    appliedMigrations: MIGRATIONS.map(m => m.id),
+});
+
+// Completa campos que falten (datos viejos o importados) y corre las migraciones pendientes
+export const normalizeData = (raw: any): AppData => {
+    const data = raw && typeof raw === 'object' ? raw : {};
+    return runMigrations({
+        ...INITIAL_DATA,
+        ...data,
+        habits: Array.isArray(data.habits) ? data.habits : DEFAULT_HABITS,
+        habitLogs: Array.isArray(data.habitLogs) ? data.habitLogs : [],
+        tasks: Array.isArray(data.tasks) ? data.tasks : [],
+        trainingLogs: Array.isArray(data.trainingLogs) ? data.trainingLogs : [],
+        nutritionLogs: Array.isArray(data.nutritionLogs) ? data.nutritionLogs : [],
+        routines: Array.isArray(data.routines) ? data.routines : DEFAULT_ROUTINES,
+        gymSessions: Array.isArray(data.gymSessions) ? data.gymSessions : [],
+        weeklyReviews: Array.isArray(data.weeklyReviews) ? data.weeklyReviews : [],
+        parkedIdeas: Array.isArray(data.parkedIdeas) ? data.parkedIdeas : INITIAL_DATA.parkedIdeas,
+        studyHabitId: data.studyHabitId || 'leer',
+        // Antes las metas estaban fijas en el código (2811 kcal / 140g)
+        goals: data.goals ?? { calories: 2811, protein: 140 },
+        // Los datos de antes de los usuarios son de Rodri
+        profile: data.profile ?? { name: 'Rodri', business: true },
+        appliedMigrations: Array.isArray(data.appliedMigrations) ? data.appliedMigrations : [],
+    });
+};
+
+const readJson = (key: string): any | null => {
     try {
-        const data = JSON.parse(stored);
-
-        // Drop `exerciseProgress` if it exists in old storage and map it to `gymSessions`. Actually just load `gymSessions`.
-        if (!data.gymSessions) {
-            data.gymSessions = [];
-        }
-
-        // Migration: Ritual de Lunes + Estacionamiento
-        if (!Array.isArray(data.weeklyReviews)) {
-            data.weeklyReviews = [];
-        }
-        if (!Array.isArray(data.parkedIdeas)) {
-            data.parkedIdeas = INITIAL_DATA.parkedIdeas;
-        }
-
-        // Ensure specific habits exist (Migration for existing users)
-        const loadedHabits = Array.isArray(data.habits) ? data.habits : DEFAULT_HABITS;
-        
-        if (!data.studyHabitId) {
-            data.studyHabitId = 'leer';
-        }
-
-        return runMigrations({
-            ...INITIAL_DATA,
-            ...data,
-            habits: loadedHabits,
-            // Ensure routines stay structured even if someone messes with the JSON
-            routines: Array.isArray(data.routines) ? data.routines : DEFAULT_ROUTINES,
-            // Antes las metas estaban fijas en el código (2811 kcal / 140g)
-            goals: data.goals ?? { calories: 2811, protein: 140 },
-            appliedMigrations: Array.isArray(data.appliedMigrations) ? data.appliedMigrations : [],
-        });
-    } catch (e) {
-        console.error('Failed to parse storage data', e);
-        return INITIAL_DATA;
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : null;
+    } catch {
+        return null;
     }
 };
 
-export const saveData = (data: AppData) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+// Datos viejos de este teléfono que todavía no se subieron a ninguna cuenta
+export const getUnclaimedLegacyData = (): AppData | null => {
+    if (localStorage.getItem(LEGACY_CLAIMED_KEY)) return null;
+    const raw = readJson(LEGACY_KEY);
+    return raw ? normalizeData(raw) : null;
+};
+export const markLegacyClaimed = () => localStorage.setItem(LEGACY_CLAIMED_KEY, new Date().toISOString());
+
+// Copia local por usuario (para abrir rápido y funcionar sin señal)
+export const readCache = (userId: string): AppData | null => {
+    const raw = readJson(cacheKey(userId));
+    return raw ? normalizeData(raw) : null;
+};
+export const writeCache = (userId: string, data: AppData) => {
+    try {
+        localStorage.setItem(cacheKey(userId), JSON.stringify(data));
+    } catch (e) {
+        console.error('No se pudo guardar la copia local', e);
+    }
 };
 
-export const exportData = () => {
-    const data = loadData();
+export const exportData = (data: AppData) => {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `rodri-daily-hq-export-${format(new Date(), 'yyyy-MM-dd')}.json`;
+    a.download = `daily-hq-export-${format(new Date(), 'yyyy-MM-dd')}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 };
 
-export const importData = (file: File): Promise<void> => {
-    return new Promise((resolve, reject) => {
+export const readImportFile = (file: File): Promise<AppData> =>
+    new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
-                const data = JSON.parse(e.target?.result as string);
-                saveData(data);
-                resolve();
+                resolve(normalizeData(JSON.parse(e.target?.result as string)));
             } catch (err) {
                 reject(err);
             }
@@ -211,4 +243,3 @@ export const importData = (file: File): Promise<void> => {
         reader.onerror = reject;
         reader.readAsText(file);
     });
-};

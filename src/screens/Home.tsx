@@ -74,7 +74,7 @@ const Home: React.FC = () => {
                 <div className="flex justify-between items-center mb-4">
                     <div>
                         <h3 className="text-lg font-bold">Day Score</h3>
-                        <p className="text-xs text-muted">Keep pushing, Rodri!</p>
+                        <p className="text-xs text-muted">Keep pushing, {data.profile.name}!</p>
                     </div>
                     <div className="text-3xl font-black text-primary">{dayScore}%</div>
                 </div>

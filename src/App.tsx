@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AppProvider } from './context/AppContext';
+import { AuthGate } from './components/AuthGate';
 import Layout from './components/Layout';
 import Home from './screens/Home';
 import Habits from './screens/Habits';
@@ -10,10 +10,9 @@ import Review from './screens/Review';
 
 export type Screen = 'home' | 'habits' | 'todo' | 'training' | 'nutrition' | 'review';
 
-function App() {
-    console.log('App component rendering...');
+// Vive dentro de AuthGate: al cambiar de usuario se reinicia en Home
+function Main() {
     const [currentScreen, setCurrentScreen] = useState<Screen>('home');
-    console.log('Current screen:', currentScreen);
 
     const renderScreen = () => {
         switch (currentScreen) {
@@ -28,11 +27,17 @@ function App() {
     };
 
     return (
-        <AppProvider>
-            <Layout currentScreen={currentScreen} onScreenChange={setCurrentScreen}>
-                {renderScreen()}
-            </Layout>
-        </AppProvider>
+        <Layout currentScreen={currentScreen} onScreenChange={setCurrentScreen}>
+            {renderScreen()}
+        </Layout>
+    );
+}
+
+function App() {
+    return (
+        <AuthGate>
+            <Main />
+        </AuthGate>
     );
 }
 

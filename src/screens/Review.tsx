@@ -2,14 +2,15 @@ import React, { useMemo } from 'react';
 import type { TrainingType } from '../types';
 import { useApp } from '../context/AppContext';
 import { Card, Button, ProgressBar, Badge } from '../components/UI';
-import { PieChart, Download, Upload, Trash2, Github, ExternalLink, Star, Dumbbell, Apple, CheckSquare } from 'lucide-react';
-import { exportData, importData } from '../utils/storage';
+import { Download, Upload, Trash2, Star, Dumbbell, Apple, CheckSquare, LogOut } from 'lucide-react';
+import { exportData, readImportFile } from '../utils/storage';
 import { format, subDays, startOfToday } from 'date-fns';
 import MondayRitual from '../components/MondayRitual';
 import ParkingLot from '../components/ParkingLot';
 
 const Review: React.FC = () => {
-    const { data, updateData, resetData } = useApp();
+    const { data, updateData, resetData, replaceData, signOut, userEmail, syncStatus } = useApp();
+    const hasLol = data.habits.some(h => h.id === 'no-lol');
 
     const stats = useMemo(() => {
         const today = startOfToday();
@@ -52,8 +53,10 @@ const Review: React.FC = () => {
         const file = e.target.files?.[0];
         if (file) {
             try {
-                await importData(file);
-                window.location.reload();
+                const imported = await readImportFile(file);
+                if (confirm('Esto reemplaza todos tus datos actuales por los del archivo. ¿Seguir?')) {
+                    replaceData({ ...imported, profile: data.profile });
+                }
             } catch (err) {
                 alert('Failed to import data');
             }
@@ -94,11 +97,11 @@ const Review: React.FC = () => {
                     <div className="text-3xl font-black">{stats.completedTasks}</div>
                     <div className="text-[10px] font-black text-muted uppercase tracking-widest mt-1">Total Tasks</div>
                 </Card>
-                <Card className="flex flex-col items-center justify-center p-6 text-center col-span-2">
+                {hasLol && <Card className="flex flex-col items-center justify-center p-6 text-center col-span-2">
                     <div className="text-3xl">🚫</div>
                     <div className="text-3xl font-black">{stats.noLolStreak}</div>
                     <div className="text-[10px] font-black text-muted uppercase tracking-widest mt-1">Días sin jugar al LoL</div>
-                </Card>
+                </Card>}
             </section>
 
             {/* Next Week Focus */}
@@ -114,13 +117,25 @@ const Review: React.FC = () => {
 
             {/* Data Management */}
             <section>
-                <h2 className="text-xl font-bold mb-3">Settings & Data</h2>
+                <h2 className="text-xl font-bold mb-3">Cuenta y datos</h2>
                 <div className="space-y-3">
+                    <Card className="p-4 mb-0 flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                            <div className="font-black truncate">{data.profile.name}</div>
+                            <div className="text-xs text-muted truncate">{userEmail}</div>
+                            <div className="text-[10px] font-bold mt-1 text-muted">
+                                {syncStatus === 'saved' ? '☁️ Todo guardado en la nube' : syncStatus === 'saving' ? '⏳ Guardando…' : '📵 Sin conexión: se sube cuando vuelva la señal'}
+                            </div>
+                        </div>
+                        <Button variant="outline" className="flex items-center gap-2 py-2 text-sm flex-shrink-0" onClick={signOut}>
+                            <LogOut size={16} /> Salir
+                        </Button>
+                    </Card>
                     <div className="flex gap-2">
                         <Button
                             variant="outline"
                             className="flex-1 flex items-center justify-center gap-2"
-                            onClick={exportData}
+                            onClick={() => exportData(data)}
                         >
                             <Download size={18} /> Export JSON
                         </Button>
@@ -136,9 +151,8 @@ const Review: React.FC = () => {
                         variant="outline"
                         className="w-full text-red-500 border-red-500/20 hover:bg-red-500/10 flex items-center justify-center gap-2"
                         onClick={() => {
-                            if (confirm('DANGER: This will delete ALL your data forever. Continue?')) {
+                            if (confirm('Esto borra TODOS tus datos (hábitos, sesiones, comidas) para siempre. ¿Seguir?')) {
                                 resetData();
-                                window.location.reload();
                             }
                         }}
                     >
@@ -148,8 +162,7 @@ const Review: React.FC = () => {
             </section>
 
             <footer className="text-center py-8">
-                <div className="text-[10px] font-black text-muted uppercase tracking-[0.2em]">Rodri Daily HQ v1.0</div>
-                <div className="mt-2 text-[10px] text-muted/50">Production Ready PWA</div>
+                <div className="text-[10px] font-black text-muted uppercase tracking-[0.2em]">Daily HQ v2.0</div>
             </footer>
         </div>
     );
