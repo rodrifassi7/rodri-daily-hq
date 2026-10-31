@@ -1,8 +1,39 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Plus, Trash2, GripVertical, ArrowUp, ArrowDown, Save } from 'lucide-react';
+import { X, Plus, Minus, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import { Card, Button, cn } from './UI';
 import type { RoutineTemplate, Exercise } from '../types';
+
+// Sugerencias para no tener que escribir el nombre completo
+const EXERCISE_SUGGESTIONS = [
+    'Press banca', 'Press inclinado mancuernas', 'Press inclinado máquina', 'Press militar', 'Press Arnold', 'Fondos',
+    'Dominadas', 'Dominadas lastradas', 'Dominadas supinas', 'Jalón al pecho', 'Remo con barra', 'Remo Pendlay',
+    'Remo a una mano', 'Remo polea', 'Facepull', 'Elevaciones laterales', 'Pájaros', 'Curl barra', 'Curl inclinado',
+    'Martillo', 'Tríceps polea', 'Tríceps francés', 'Sentadilla', 'Sentadilla búlgara', 'Prensa', 'Extensiones',
+    'Curl femoral', 'Peso muerto', 'Peso muerto rumano', 'Hip thrust', 'Zancadas', 'Gemelos parado', 'Gemelos sentado',
+    'Elevaciones de piernas colgado', 'Rueda abdominal', 'Plancha', 'Pallof press', 'Abductores', 'Aductores',
+];
+
+const Stepper: React.FC<{ label: string; value: number; min?: number; onChange: (v: number) => void }> = ({ label, value, min = 1, onChange }) => (
+    <div>
+        <label className="text-xs font-bold text-muted uppercase">{label}</label>
+        <div className="flex items-center mt-1 bg-black border border-white/10 rounded-xl">
+            <button type="button" onClick={() => onChange(Math.max(min, value - 1))} className="w-9 h-12 flex items-center justify-center text-muted active:text-white" aria-label={`Menos ${label}`}>
+                <Minus size={16} />
+            </button>
+            <input
+                type="number" inputMode="numeric" min={min}
+                value={value}
+                onChange={e => onChange(Math.max(min, parseInt(e.target.value) || min))}
+                onFocus={e => e.target.select()}
+                className="w-full min-w-0 bg-transparent text-center font-bold text-white outline-none"
+            />
+            <button type="button" onClick={() => onChange(value + 1)} className="w-9 h-12 flex items-center justify-center text-muted active:text-white" aria-label={`Más ${label}`}>
+                <Plus size={16} />
+            </button>
+        </div>
+    </div>
+);
 
 interface RoutineEditorProps {
     routine: RoutineTemplate | null; // null means new routine
@@ -19,9 +50,16 @@ export const RoutineEditor: React.FC<RoutineEditorProps> = ({ routine, onClose, 
     // Temp state for editing an exercise
     const [tempExercise, setTempExercise] = useState<Exercise | null>(null);
 
+    const isDirty = title !== (routine?.title || '') || JSON.stringify(exercises) !== JSON.stringify(routine?.exercises || []);
+
+    const handleClose = () => {
+        if (isDirty && !window.confirm('Tenés cambios sin guardar. ¿Salir igual?')) return;
+        onClose();
+    };
+
     const handleSave = () => {
-        if (!title.trim()) return alert('El título es requerido');
-        if (exercises.length === 0) return alert('Agrega al menos un ejercicio');
+        if (!title.trim()) return alert('Ponele un nombre a la rutina');
+        if (exercises.length === 0) return alert('Agregá al menos un ejercicio');
 
         const newRoutine: RoutineTemplate = {
             id: routine?.id || Math.random().toString(36).substring(2, 9),
@@ -33,7 +71,7 @@ export const RoutineEditor: React.FC<RoutineEditorProps> = ({ routine, onClose, 
 
     const handleDeleteRoutine = () => {
         if (routine && onDelete) {
-            if (window.confirm('¿Seguro que quieres eliminar esta rutina?')) {
+            if (window.confirm('¿Seguro que querés eliminar esta rutina? El historial de pesos se mantiene.')) {
                 onDelete(routine.id);
             }
         }
@@ -99,6 +137,8 @@ export const RoutineEditor: React.FC<RoutineEditorProps> = ({ routine, onClose, 
         } else {
             const newTarget = { ...tempExercise.target, [field]: value };
             
+            if (field === 'minReps' && newTarget.minReps > newTarget.maxReps) newTarget.maxReps = newTarget.minReps;
+            if (field === 'maxReps' && newTarget.maxReps < newTarget.minReps) newTarget.minReps = newTarget.maxReps;
             if (field === 'minReps' || field === 'maxReps') {
                 newTarget.reps = `${newTarget.minReps}-${newTarget.maxReps}`;
             }
@@ -110,12 +150,15 @@ export const RoutineEditor: React.FC<RoutineEditorProps> = ({ routine, onClose, 
     return (
         <div className="fixed inset-0 z-50 flex flex-col bg-black">
             <header className="flex justify-between items-center p-4 border-b border-white/10 bg-black sticky top-0 z-10">
-                <button onClick={onClose} className="p-2 bg-white/5 rounded-full text-muted">
+                <button onClick={handleClose} className="p-2 bg-white/5 rounded-full text-muted" aria-label="Cerrar">
                     <X size={20} />
                 </button>
-                <h2 className="font-black text-xl">{routine ? 'Editar Rutina' : 'Nueva Rutina'}</h2>
-                <button onClick={handleSave} className="p-2 bg-primary text-black rounded-full">
-                    <Save size={20} />
+                <h2 className="font-black text-xl">{routine ? 'Editar rutina' : 'Nueva rutina'}</h2>
+                <button
+                    onClick={handleSave}
+                    className={cn("px-4 py-2 rounded-full font-black text-sm transition-all", isDirty ? "bg-primary text-black" : "bg-white/5 text-muted")}
+                >
+                    Guardar
                 </button>
             </header>
 
@@ -141,7 +184,7 @@ export const RoutineEditor: React.FC<RoutineEditorProps> = ({ routine, onClose, 
 
                     {exercises.length === 0 ? (
                         <div className="text-center p-8 border border-dashed border-white/10 rounded-2xl text-muted text-sm">
-                            No hay ejercicios. Agrega uno para empezar.
+                            No hay ejercicios. Agregá uno para empezar.
                         </div>
                     ) : (
                         <div className="space-y-2">
@@ -204,49 +247,28 @@ export const RoutineEditor: React.FC<RoutineEditorProps> = ({ routine, onClose, 
                                 <label className="text-xs font-bold text-muted uppercase">Nombre</label>
                                 <input
                                     type="text"
+                                    list="exercise-suggestions"
+                                    autoFocus={!tempExercise.name}
+                                    placeholder="Empezá a escribir…"
                                     value={tempExercise.name}
                                     onChange={e => handleTempExerciseChange('name', e.target.value)}
                                     className="w-full bg-black border border-white/10 rounded-xl p-3 font-bold mt-1 text-white"
                                 />
+                                <datalist id="exercise-suggestions">
+                                    {EXERCISE_SUGGESTIONS.map(n => <option key={n} value={n} />)}
+                                </datalist>
                             </div>
 
-                            <div className="grid grid-cols-3 gap-3">
-                                <div>
-                                    <label className="text-xs font-bold text-muted uppercase">Sets</label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        value={tempExercise.target.sets}
-                                        onChange={e => handleTempExerciseChange('sets', parseInt(e.target.value) || 1)}
-                                        className="w-full bg-black border border-white/10 rounded-xl p-3 font-bold mt-1 text-center text-white"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-xs font-bold text-muted uppercase">Min Reps</label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        value={tempExercise.target.minReps}
-                                        onChange={e => handleTempExerciseChange('minReps', parseInt(e.target.value) || 1)}
-                                        className="w-full bg-black border border-white/10 rounded-xl p-3 font-bold mt-1 text-center text-white"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-xs font-bold text-muted uppercase">Max Reps</label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        value={tempExercise.target.maxReps}
-                                        onChange={e => handleTempExerciseChange('maxReps', parseInt(e.target.value) || 1)}
-                                        className="w-full bg-black border border-white/10 rounded-xl p-3 font-bold mt-1 text-center text-white"
-                                    />
-                                </div>
+                            <div className="grid grid-cols-3 gap-2">
+                                <Stepper label="Series" value={tempExercise.target.sets} onChange={v => handleTempExerciseChange('sets', v)} />
+                                <Stepper label="Reps mín" value={tempExercise.target.minReps} onChange={v => handleTempExerciseChange('minReps', v)} />
+                                <Stepper label="Reps máx" value={tempExercise.target.maxReps} onChange={v => handleTempExerciseChange('maxReps', v)} />
                             </div>
                             
                             <div>
                                 <label className="text-xs font-bold text-muted uppercase flex justify-between">
                                     <span>Texto de Reps</span>
-                                    <span className="text-[10px] text-primary normal-case">Puedes personalizarlo</span>
+                                    <span className="text-[10px] text-primary normal-case">Opcional, ej: 12-15 + myo</span>
                                 </label>
                                 <input
                                     type="text"
@@ -265,7 +287,7 @@ export const RoutineEditor: React.FC<RoutineEditorProps> = ({ routine, onClose, 
                                 />
                                 <div className="flex flex-col">
                                     <span className="font-bold">Ejercicio Principal</span>
-                                    <span className="text-xs text-muted">Aparece destacado en la rutina</span>
+                                    <span className="text-xs text-muted">Se destaca y sube de a 2.5kg (accesorios de a 1kg)</span>
                                 </div>
                             </label>
                         </div>

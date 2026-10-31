@@ -136,4 +136,11 @@ export interface AppData {
     weeklyReviews: WeeklyReview[];
     parkedIdeas: ParkedIdea[];
     studyHabitId?: string;
+    goals: NutritionGoals;
+    appliedMigrations: string[];
+}
+
+export interface NutritionGoals {
+    calories: number;
+    protein: number;
 }

@@ -32,11 +32,11 @@ const Home: React.FC = () => {
     const dayScore = useMemo(() => {
         const habitScore = todayHabits.length > 0 ? (todayHabits.filter(h => h.completed).length / todayHabits.length) * 40 : 0;
         const trainingScore = todayTraining ? 20 : 0;
-        const nutritionScore = (Math.min(1, todayNutrition.calories / 2811) * 10 + Math.min(1, todayNutrition.protein / 140) * 20);
+        const nutritionScore = (Math.min(1, todayNutrition.calories / data.goals.calories) * 10 + Math.min(1, todayNutrition.protein / data.goals.protein) * 20);
         const taskScore = todayTasks.length > 0 ? (todayTasks.filter(t => t.completed).length / todayTasks.length) * 10 : 0;
 
         return Math.round(habitScore + trainingScore + nutritionScore + taskScore);
-    }, [todayHabits, todayTraining, todayNutrition, todayTasks]);
+    }, [todayHabits, todayTraining, todayNutrition, todayTasks, data.goals]);
 
     const streak = useMemo(() => {
         // Simple streak calculation: count consecutive days with at least one habit done
@@ -171,9 +171,9 @@ const Home: React.FC = () => {
                     <Card className="mb-0 flex flex-col gap-2">
                         <div className="flex justify-between items-end">
                             <span className="text-xs font-bold text-muted">CALORIES</span>
-                            <span className="text-sm font-black">{todayNutrition.calories}/2811</span>
+                            <span className="text-sm font-black">{todayNutrition.calories}/{data.goals.calories}</span>
                         </div>
-                        <ProgressBar progress={(todayNutrition.calories / 2811) * 100} />
+                        <ProgressBar progress={(todayNutrition.calories / data.goals.calories) * 100} />
                         <div className="flex gap-1 mt-1">
                             <button
                                 onClick={() => updateNutrition(todayStr, todayNutrition.calories + 300, todayNutrition.protein)}
@@ -186,9 +186,9 @@ const Home: React.FC = () => {
                     <Card className="mb-0 flex flex-col gap-2">
                         <div className="flex justify-between items-end">
                             <span className="text-xs font-bold text-muted">PROTEIN</span>
-                            <span className="text-sm font-black">{todayNutrition.protein}g/140g</span>
+                            <span className="text-sm font-black">{todayNutrition.protein}g/{data.goals.protein}g</span>
                         </div>
-                        <ProgressBar progress={(todayNutrition.protein / 140) * 100} />
+                        <ProgressBar progress={(todayNutrition.protein / data.goals.protein) * 100} />
                         <div className="flex gap-1 mt-1">
                             <button
                                 onClick={() => updateNutrition(todayStr, todayNutrition.calories, todayNutrition.protein + 20)}

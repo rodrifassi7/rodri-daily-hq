@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useApp } from '../context/AppContext';
 import { Card, cn } from '../components/UI';
 import { Calendar, Dumbbell, ChevronRight, Edit3, Plus } from 'lucide-react';
@@ -24,6 +25,19 @@ const Training: React.FC = () => {
     }, []);
 
     const logsForSelected = data.trainingLogs.find(l => l.date === selectedDate);
+
+    // Qué rutina toca: la siguiente a la última que entrenaste (con al menos una serie hecha)
+    const mainRoutines = data.routines.filter(r => !r.isOptional);
+    const nextRoutineId = useMemo(() => {
+        const done = data.gymSessions
+            .filter(s => s.exercises.some(e => e.sets.some(set => set.completed)))
+            .sort((a, b) => b.date.localeCompare(a.date));
+        const last = done[0];
+        if (!last) return mainRoutines[0]?.id;
+        if (last.date === todayStr) return last.routineId;
+        const idx = mainRoutines.findIndex(r => r.id === last.routineId);
+        return mainRoutines[(idx + 1) % mainRoutines.length]?.id;
+    }, [data.gymSessions, mainRoutines, todayStr]);
 
     // Weekly counters
     const startOfWeek = subDays(startOfToday(), 6); // Last 7 days including today
@@ -106,19 +120,22 @@ const Training: React.FC = () => {
                     </button>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                    {data.routines.filter(r => !r.isOptional).map(routine => {
+                    {mainRoutines.map(routine => {
+                        const isNext = routine.id === nextRoutineId;
                         return (
                             <button
                                 key={routine.id}
                                 onClick={() => setActiveRoutine(routine)}
-                                className="bg-card border border-border p-5 rounded-3xl text-left active:scale-[0.97] transition-all flex flex-col justify-between min-h-[120px] relative overflow-hidden group"
+                                className={cn("bg-card border p-5 rounded-3xl text-left active:scale-[0.97] transition-all flex flex-col justify-between min-h-[120px] relative overflow-hidden group", isNext ? "border-primary ring-1 ring-primary/40" : "border-border")}
                             >
                                 <div className="absolute top-0 right-0 p-4 opacity-5 bg-gradient-to-bl from-white to-transparent w-full h-full pointer-events-none" />
                                 
-                                <span className="text-[10px] font-black text-primary uppercase tracking-widest">{routine.title.split(' ')[0]}</span>
+                                <span className="text-[10px] font-black text-primary uppercase tracking-widest">
+                                    {isNext ? '▶ Toca hoy' : routine.title.split(' ')[0]}
+                                </span>
                                 
                                 <div className="flex items-center justify-between mt-2 z-10 w-full">
-                                    <span className="font-black text-xl leading-none">{routine.title.split(' ').slice(1).join(' ')}</span>
+                                    <span className="font-black text-xl leading-none">{isNext ? routine.title : (routine.title.split(' ').slice(1).join(' ') || routine.title)}</span>
                                     <div className="flex gap-1 z-20">
                                         <div 
                                             onClick={(e) => { e.stopPropagation(); setEditingRoutine(routine); }}
@@ -137,6 +154,8 @@ const Training: React.FC = () => {
                 </div>
             </section>
 
+            {/* Los modales van al body para que la barra de navegación no tape el timer */}
+            {createPortal(<>
             {/* Routine Detail Modal */}
             <AnimatePresence>
                 {activeRoutine && (
@@ -181,6 +200,7 @@ const Training: React.FC = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
+            </>, document.body)}
         </div>
     );
 };
