@@ -6,11 +6,16 @@ import { Download, Upload, Trash2, Star, Dumbbell, Apple, CheckSquare, LogOut } 
 import { exportData, readImportFile } from '../utils/storage';
 import { format, subDays, startOfToday } from 'date-fns';
 import MondayRitual from '../components/MondayRitual';
+import { GoalsEditor } from '../components/GoalsEditor';
+import { GOAL_OPTIONS, activityEmoji } from '../utils/plan';
+import { useState } from 'react';
 import ParkingLot from '../components/ParkingLot';
 
 const Review: React.FC = () => {
     const { data, updateData, resetData, replaceData, signOut, userEmail, syncStatus } = useApp();
     const hasLol = data.habits.some(h => h.id === 'no-lol');
+    const [editingGoals, setEditingGoals] = useState(false);
+    const goalInfo = GOAL_OPTIONS.find(g => g.id === data.profile.goal);
 
     const stats = useMemo(() => {
         const today = startOfToday();
@@ -119,6 +124,21 @@ const Review: React.FC = () => {
             <section>
                 <h2 className="text-xl font-bold mb-3">Cuenta y datos</h2>
                 <div className="space-y-3">
+                    <button onClick={() => setEditingGoals(true)} className="w-full text-left bg-card border border-border rounded-2xl p-4 active:scale-[0.98] transition-all">
+                        <div className="flex justify-between items-center">
+                            <span className="font-black">🎯 Mis objetivos</span>
+                            <span className="text-xs text-primary font-bold">{goalInfo ? 'Editar' : 'Completar'}</span>
+                        </div>
+                        <div className="text-xs text-muted mt-1">
+                            {goalInfo ? `${goalInfo.emoji} ${goalInfo.title} · ${data.goals.calories} kcal · ${data.goals.protein}g proteína` : 'Todavía no cargaste tus objetivos.'}
+                        </div>
+                        {(data.profile.activities?.length ?? 0) > 0 && (
+                            <div className="text-xs text-muted mt-1">
+                                {data.profile.activities!.map(a => `${activityEmoji(a.type)} ${a.type} ${a.days}`).join(' · ')}
+                            </div>
+                        )}
+                    </button>
+                    {editingGoals && <GoalsEditor onClose={() => setEditingGoals(false)} />}
                     <Card className="p-4 mb-0 flex items-center justify-between gap-3">
                         <div className="min-w-0">
                             <div className="font-black truncate">{data.profile.name}</div>

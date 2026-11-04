@@ -1,4 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
+import { GoalsEditor } from '../components/GoalsEditor';
+import { trainingOptions, activityLabel, activityEmoji, weeklyTarget } from '../utils/plan';
+import { subDays } from 'date-fns';
 import { cn } from '../components/UI';
 import { useApp } from '../context/AppContext';
 import { format, startOfToday, isSameDay } from 'date-fns';
@@ -9,6 +12,9 @@ import { motion } from 'framer-motion';
 const Home: React.FC = () => {
     const { data, toggleHabit, updateTraining, updateNutrition } = useApp();
     const todayStr = format(startOfToday(), 'yyyy-MM-dd');
+    const [editingGoals, setEditingGoals] = useState(false);
+    const weekStart = format(subDays(startOfToday(), 6), 'yyyy-MM-dd');
+    const weekTrainings = data.trainingLogs.filter(l => l.date >= weekStart && l.type !== 'Rest').length;
 
     const todayHabits = useMemo(() => {
         return data.habits.map(h => ({
@@ -68,6 +74,18 @@ const Home: React.FC = () => {
                     <span className="font-bold text-primary">{streak}</span>
                 </div>
             </header>
+
+            {/* Conozcámonos: para cuentas que todavía no cargaron objetivos */}
+            {!data.profile.goal && (
+                <button
+                    onClick={() => setEditingGoals(true)}
+                    className="w-full text-left bg-primary/10 border border-primary/40 rounded-2xl p-4 active:scale-[0.98] transition-all"
+                >
+                    <div className="font-black">🎯 Contanos tus objetivos</div>
+                    <div className="text-xs text-muted mt-1">4 preguntas y ajustamos calorías, proteína y tu semana de entrenamiento.</div>
+                </button>
+            )}
+            {editingGoals && <GoalsEditor onClose={() => setEditingGoals(false)} />}
 
             {/* Day Score */}
             <Card className="bg-gradient-to-br from-card to-black relative overflow-hidden ring-1 ring-white/10">
@@ -141,20 +159,20 @@ const Home: React.FC = () => {
                 </div>
                 <Card className="flex flex-col gap-4">
                     <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">Status: {todayTraining?.type || 'Not logged'}</span>
+                        <span className="text-sm font-medium">Hoy: {todayTraining?.type ? `${activityEmoji(todayTraining.type)} ${activityLabel(todayTraining.type)}` : 'sin cargar'}</span>
                         <Badge color={todayTraining?.type ? 'bg-primary/20 text-primary' : 'bg-white/10 text-muted'}>
                             {todayTraining ? 'DONE ✅' : 'PENDING'}
                         </Badge>
                     </div>
-                    <div className="flex gap-2">
-                        {(['Gym', 'Rest'] as const).map(type => (
+                    <div className="flex gap-2 flex-wrap">
+                        {trainingOptions(data.profile).map(type => (
                             <Button
                                 key={type}
                                 variant={todayTraining?.type === type ? 'primary' : 'outline'}
-                                className="flex-1 py-2 text-xs"
+                                className={cn("flex-1 py-2 text-xs min-w-[30%]", todayTraining?.type === type && "bg-primary text-black")}
                                 onClick={() => updateTraining(todayStr, type)}
                             >
-                                {type}
+                                {activityEmoji(type)} {activityLabel(type)}
                             </Button>
                         ))}
                     </div>
@@ -213,9 +231,9 @@ const Home: React.FC = () => {
                         <div className="text-lg font-black">{streak}</div>
                     </div>
                     <div className="bg-card border border-border rounded-xl p-3 text-center">
-                        <div className="text-xs text-muted mb-1">GYM</div>
+                        <div className="text-xs text-muted mb-1">ENTRENOS</div>
                         <div className="text-lg font-black">
-                            {data.trainingLogs.filter(l => l.type === 'Gym').length}/4
+                            {weekTrainings}/{weeklyTarget(data.profile)}
                         </div>
                     </div>
                 </div>

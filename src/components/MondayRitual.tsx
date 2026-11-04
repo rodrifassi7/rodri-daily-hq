@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import type { WeeklyReview } from '../types';
 import { useApp } from '../context/AppContext';
+import { weeklyTarget } from '../utils/plan';
 import { Card, Button } from './UI';
 import { ClipboardCheck, TrendingUp, TrendingDown, Minus, Pencil } from 'lucide-react';
 import { format, startOfWeek, subDays, startOfToday } from 'date-fns';
@@ -59,10 +60,10 @@ const MondayRitual: React.FC = () => {
     // Auto-computed from existing app data (last 7 days)
     const auto = useMemo(() => {
         const last7 = Array.from({ length: 7 }, (_, i) => format(subDays(startOfToday(), i), 'yyyy-MM-dd'));
-        const entrenamientos = data.gymSessions.filter(s => last7.includes(s.date)).length;
+        const entrenamientos = data.trainingLogs.filter(l => last7.includes(l.date) && l.type !== 'Rest').length;
         const estudio = data.studyHabitId ? data.habitLogs.filter(l => l.habitId === data.studyHabitId && last7.includes(l.date) && l.completed).length : 0;
         return { entrenamientos, estudio };
-    }, [data.gymSessions, data.habitLogs, data.studyHabitId]);
+    }, [data.trainingLogs, data.habitLogs, data.studyHabitId]);
 
     const sorted = useMemo(
         () => [...data.weeklyReviews].sort((a, b) => b.weekOf.localeCompare(a.weekOf)),
@@ -102,7 +103,7 @@ const MondayRitual: React.FC = () => {
             {/* Auto stats */}
             <div className="flex gap-2 mb-3">
                 <div className="flex-1 bg-card border border-border rounded-xl p-3 text-center">
-                    <div className="text-xl font-black">{auto.entrenamientos}/4</div>
+                    <div className="text-xl font-black">{auto.entrenamientos}/{weeklyTarget(data.profile)}</div>
                     <div className="text-[9px] font-black text-muted uppercase tracking-widest">Entrenos (auto)</div>
                 </div>
                 <div className="flex-1 bg-card border border-border rounded-xl p-3 text-center">

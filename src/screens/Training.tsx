@@ -7,6 +7,7 @@ import { format, startOfToday, subDays, eachDayOfInterval } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { RoutineTemplate } from '../types';
 import { GymSessionView } from '../components/GymSessionView';
+import { trainingOptions, activityLabel, activityEmoji, weeklyTarget } from '../utils/plan';
 import { RoutineEditor } from '../components/RoutineEditor';
 
 const Training: React.FC = () => {
@@ -42,7 +43,8 @@ const Training: React.FC = () => {
     // Weekly counters
     const startOfWeek = subDays(startOfToday(), 6); // Last 7 days including today
     const weeklyLogs = data.trainingLogs.filter(l => l.date >= format(startOfWeek, 'yyyy-MM-dd'));
-    const gymCount = weeklyLogs.filter(l => l.type === 'Gym').length;
+    const gymCount = weeklyLogs.filter(l => l.type !== 'Rest').length;
+    const target = weeklyTarget(data.profile);
 
     return (
         <div className="space-y-6 pb-20">
@@ -77,20 +79,20 @@ const Training: React.FC = () => {
 
             {/* Stats */}
             <Card className="text-center p-4">
-                <div className="text-[10px] font-black text-muted mb-1 uppercase tracking-widest">Gym This Week</div>
+                <div className="text-[10px] font-black text-muted mb-1 uppercase tracking-widest">Entrenamientos esta semana</div>
                 <div className="flex items-center justify-center gap-2">
                     <span className="text-3xl font-black">{gymCount}</span>
-                    <span className="text-lg text-muted font-bold">/ 4</span>
+                    <span className="text-lg text-muted font-bold">/ {target}</span>
                 </div>
                 <div className="mt-2 h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                    <div className="h-full bg-primary transition-all duration-500" style={{ width: `${Math.min(100, (gymCount / 4) * 100)}%` }} />
+                    <div className="h-full bg-primary transition-all duration-500" style={{ width: `${Math.min(100, (gymCount / target) * 100)}%` }} />
                 </div>
             </Card>
 
             {/* Log Status */}
             <section>
                 <div className="flex flex-col gap-2">
-                    {(['Gym', 'Rest'] as const).map(type => (
+                    {trainingOptions(data.profile).map(type => (
                         <button
                             key={type}
                             onClick={() => updateTraining(selectedDate, type)}
@@ -101,7 +103,7 @@ const Training: React.FC = () => {
                                     : "bg-white/5 border-white/10 text-muted"
                             )}
                         >
-                            <span className="font-bold">{type} session</span>
+                            <span className="font-bold">{activityEmoji(type)} {activityLabel(type)}</span>
                             {logsForSelected?.type === type && <div className="bg-primary text-black p-1 rounded-full"><CheckIcon /></div>}
                         </button>
                     ))}
@@ -112,13 +114,18 @@ const Training: React.FC = () => {
             <section>
                 <div className="flex items-center justify-between mb-4 px-1 mt-6">
                     <div className="flex items-center gap-2">
-                        <h2 className="text-2xl font-black">Routines</h2>
+                        <h2 className="text-2xl font-black">Rutinas</h2>
                         <Dumbbell size={24} className="text-primary" />
                     </div>
                     <button onClick={() => setEditingRoutine('new')} className="p-2 bg-primary/20 text-primary rounded-full hover:bg-primary/30">
                         <Plus size={20} />
                     </button>
                 </div>
+                {mainRoutines.length === 0 && (
+                    <div className="text-center p-6 border border-dashed border-white/10 rounded-2xl text-muted text-sm">
+                        No tenés rutinas de gym. Tocá <span className="text-primary font-bold">+</span> para crear una, o pedí que te armemos una en Review → Mis objetivos.
+                    </div>
+                )}
                 <div className="grid grid-cols-2 gap-3">
                     {mainRoutines.map(routine => {
                         const isNext = routine.id === nextRoutineId;

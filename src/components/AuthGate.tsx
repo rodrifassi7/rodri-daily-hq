@@ -4,9 +4,10 @@ import { supabase } from '../lib/supabase';
 import { AppProvider } from '../context/AppContext';
 import type { AppData } from '../types';
 import {
-    readCache, normalizeData, createNewUserData,
+    readCache, normalizeData, createNewUserData, createPersonalizedData,
     getUnclaimedLegacyData, markLegacyClaimed,
 } from '../utils/storage';
+import { Onboarding } from './Onboarding';
 import { Button } from './UI';
 
 type Ready = { data: AppData; needsUpload: boolean };
@@ -103,9 +104,9 @@ const LoginScreen: React.FC = () => {
 
 // ---------- Primera vez en una cuenta ----------
 const SetupScreen: React.FC<{ defaultName: string; legacy: AppData | null; onDone: (data: AppData) => void }> = ({ defaultName, legacy, onDone }) => {
-    const [name, setName] = useState(defaultName);
+    const [skipLegacy, setSkipLegacy] = useState(false);
 
-    if (legacy) {
+    if (legacy && !skipLegacy) {
         const sessions = legacy.gymSessions.length;
         return (
             <Shell>
@@ -119,29 +120,21 @@ const SetupScreen: React.FC<{ defaultName: string; legacy: AppData | null; onDon
                 <Button className="w-full bg-primary text-black font-black" onClick={() => { markLegacyClaimed(); onDone(legacy); }}>
                     Sí, son míos: pasarlos a mi cuenta
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => onDone(createNewUserData(name, true))}>
+                <Button variant="outline" className="w-full" onClick={() => setSkipLegacy(true)}>
                     No, empezar de cero
                 </Button>
             </Shell>
         );
     }
 
+    const initial = createNewUserData(defaultName, false);
     return (
-        <Shell>
-            <div>
-                <h1 className="text-3xl font-black">¡Bienvenida/o!</h1>
-                <p className="text-muted mt-2 text-sm">Dos cosas y arrancás. Todo se puede cambiar después.</p>
-            </div>
-            <input className={inputCls} placeholder="¿Cómo te llamás?" value={name} onChange={e => setName(e.target.value)} />
-            <div className="space-y-3">
-                <Button className="w-full bg-primary text-black font-black" onClick={() => onDone(createNewUserData(name, true))}>
-                    Empezar con la rutina base (4 días)
-                </Button>
-                <Button variant="outline" className="w-full" onClick={() => onDone(createNewUserData(name, false))}>
-                    Empezar sin rutina y armo la mía
-                </Button>
-            </div>
-        </Shell>
+        <Onboarding
+            mode="new"
+            initialProfile={initial.profile}
+            hasRoutines={false}
+            onDone={({ profile, goals, routines }) => onDone(createPersonalizedData(profile, goals, routines ?? []))}
+        />
     );
 };
 
