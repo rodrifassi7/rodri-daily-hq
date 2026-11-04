@@ -1,4 +1,4 @@
-import type { AppData, Habit, RoutineTemplate, Exercise } from '../types';
+import type { AppData, Habit, RoutineTemplate, Exercise, NutritionGoals, Profile } from '../types';
 import { format } from 'date-fns';
 
 const STORAGE_KEY = 'rodri_daily_hq_data';
@@ -17,7 +17,7 @@ const DEFAULT_HABITS: Habit[] = [
     { id: 'leer', name: 'Leer 2 páginas', emoji: '📖', type: 'checkbox', frequency: 'daily', createdAt: new Date().toISOString() },
 ];
 
-const DEFAULT_ROUTINES: RoutineTemplate[] = [
+export const DEFAULT_ROUTINES: RoutineTemplate[] = [
     {
         id: 'upper-a',
         title: 'Upper A',
@@ -163,6 +163,18 @@ export const createNewUserData = (name: string, withBaseRoutine: boolean): AppDa
     profile: { name: name.trim() || 'Vos', business: false },
     appliedMigrations: MIGRATIONS.map(m => m.id),
 });
+
+// Usuario nuevo a partir de "Conozcámonos"
+export const createPersonalizedData = (profile: Profile, goals: NutritionGoals, routines: RoutineTemplate[]): AppData => {
+    const base = createNewUserData(profile.name, false);
+    return {
+        ...base,
+        profile: { ...profile, business: false },
+        goals,
+        routines,
+        habits: base.habits.map(h => (h.id === '2' ? { ...h, name: `Proteína ${goals.protein}g` } : h)),
+    };
+};
 
 // Completa campos que falten (datos viejos o importados) y corre las migraciones pendientes
 export const normalizeData = (raw: any): AppData => {

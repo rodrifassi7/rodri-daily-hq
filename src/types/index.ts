@@ -2,7 +2,8 @@ export type Priority = 'High' | 'Medium' | 'Low';
 export type Category = 'Gym' | 'NP PRO' | 'Personal';
 export type Frequency = 'daily' | 'weekly';
 export type HabitType = 'checkbox' | 'numeric';
-export type TrainingType = 'Gym' | 'Rest'; // Removed Padel
+// 'Gym', 'Rest' o el nombre de otra actividad del perfil (Yoga, Funcional, Pádel...)
+export type TrainingType = string;
 export type NutritionRating = 'Good' | 'OK' | 'Bad';
 
 export interface Habit {
@@ -141,10 +142,27 @@ export interface AppData {
     appliedMigrations: string[];
 }
 
+export type GoalId = 'recomp' | 'perder' | 'ganar' | 'mantener' | 'rendimiento';
+export type Sex = 'm' | 'f';
+export type GymFocus = 'equilibrado' | 'superior' | 'gluteos';
+
+export interface WeeklyActivity {
+    type: string;   // 'Gym', 'Pádel', 'Yoga', 'Funcional'...
+    days: number;   // días por semana
+}
+
 export interface Profile {
     name: string;
     // Muestra lo de negocio (NPPRO en el ritual de lunes, categoría NP PRO, etc.)
     business: boolean;
+    // Lo que se completa en "Conozcámonos" (opcional: los datos viejos no lo tienen)
+    goal?: GoalId;
+    sex?: Sex;
+    age?: number;
+    heightCm?: number;
+    weightKg?: number;
+    activities?: WeeklyActivity[];
+    gymFocus?: GymFocus;
 }
 
 export interface NutritionGoals {
