@@ -18,6 +18,10 @@ const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     </div>
 );
 
+// Sin contraseña: la app usa una clave fija interna, así que se entra solo con el mail.
+// (Decisión de Rodri: es una app para dos personas, sin seguridad de por medio.)
+const APP_PASSWORD = 'daily-hq-solo-mail-2026';
+
 const inputCls = 'w-full bg-white/5 border border-white/10 rounded-xl p-4 font-bold text-white outline-none focus:border-primary';
 
 // ---------- Login / registro ----------
@@ -25,7 +29,6 @@ const LoginScreen: React.FC = () => {
     const [mode, setMode] = useState<'login' | 'signup'>('login');
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<{ type: 'error' | 'info'; text: string } | null>(null);
 
@@ -33,33 +36,32 @@ const LoginScreen: React.FC = () => {
         e.preventDefault();
         setLoading(true);
         setMessage(null);
+        const mail = email.trim().toLowerCase();
         if (mode === 'login') {
-            const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+            const { error } = await supabase.auth.signInWithPassword({ email: mail, password: APP_PASSWORD });
             if (error) {
                 setMessage({
                     type: 'error',
-                    text: error.message.includes('Email not confirmed')
-                        ? 'Todavía no confirmaste el mail. Revisá tu casilla (y spam).'
-                        : error.message.includes('Invalid login')
-                            ? 'Mail o contraseña incorrectos.'
-                            : `No se pudo entrar: ${error.message}`,
+                    text: error.message.includes('Invalid login')
+                        ? 'No encontramos ese mail. Si sos nueva/o, tocá "Crear cuenta".'
+                        : `No se pudo entrar: ${error.message}`,
                 });
             }
         } else {
-            if (password.length < 6) {
-                setLoading(false);
-                return setMessage({ type: 'error', text: 'La contraseña tiene que tener al menos 6 caracteres.' });
-            }
             const { data, error } = await supabase.auth.signUp({
-                email: email.trim(),
-                password,
-                options: { data: { name: name.trim() }, emailRedirectTo: window.location.origin },
+                email: mail,
+                password: APP_PASSWORD,
+                options: { data: { name: name.trim() } },
             });
             if (error) {
-                setMessage({ type: 'error', text: error.message.includes('already registered') ? 'Ese mail ya tiene cuenta. Entrá con tu contraseña.' : `No se pudo crear la cuenta: ${error.message}` });
+                setMessage({ type: 'error', text: error.message.includes('already registered') ? 'Ese mail ya tiene cuenta. Tocá "Entrar".' : `No se pudo crear la cuenta: ${error.message}` });
             } else if (!data.session) {
-                setMessage({ type: 'info', text: 'Listo. Te mandamos un mail para confirmar la cuenta: tocá el link y después entrá acá.' });
-                setMode('login');
+                // Por si el proyecto no auto-confirma: probamos entrar igual
+                const { error: signInError } = await supabase.auth.signInWithPassword({ email: mail, password: APP_PASSWORD });
+                if (signInError) {
+                    setMessage({ type: 'error', text: `Cuenta creada pero no se pudo entrar: ${signInError.message}` });
+                    setMode('login');
+                }
             }
         }
         setLoading(false);
@@ -90,7 +92,6 @@ const LoginScreen: React.FC = () => {
                     <input className={inputCls} placeholder="Tu nombre" value={name} onChange={e => setName(e.target.value)} required autoComplete="given-name" />
                 )}
                 <input className={inputCls} type="email" placeholder="Mail" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" inputMode="email" />
-                <input className={inputCls} type="password" placeholder="Contraseña" value={password} onChange={e => setPassword(e.target.value)} required autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
                 {message && (
                     <p className={`text-sm font-semibold ${message.type === 'error' ? 'text-red-400' : 'text-primary'}`}>{message.text}</p>
                 )}
